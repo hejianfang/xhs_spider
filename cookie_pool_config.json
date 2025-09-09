@@ -1,0 +1,31 @@
+{
+  "strategy": "round_robin",
+  "accounts": [
+    {
+      "cookie_str": "abRequestId=a93216b3-26e7-5b6a-9457-d497f5c5e069; a1=1991284cf97kexvjw97mxw2nqcbvonyxtlins3ms430000250902; webId=3e87fed8163661ea799d4a2504c2cf4a; gid=yjjyJY4dK89KyjjyJY4Si1q6jWTdChVEjW6C3M4EJIASDIq8hlIvCM888J28j8J8Yif8J2jd; webBuild=4.79.0; xsecappid=xhs-pc-web; loadts=1757384892292; acw_tc=0ad6fbde17573848926561925eddd8912c138715ea227439441c449d6d5b8e; websectiga=9730ffafd96f2d09dc024760e253af6ab1feb0002827740b95a255ddf6847fc8; sec_poison_id=968ba4c2-ecba-44c8-9dcf-95af2eced08c; web_session=040069b7fa0b116423e5b8d88a3a4b675ccf16; unread={%22ub%22:%22689cbdf6000000001c005038%22%2C%22ue%22:%2268a5a066000000001d01f690%22%2C%22uc%22:29}",
+      "name": "1",
+      "remark": "",
+      "is_active": true,
+      "use_count": 3,
+      "success_count": 1,
+      "fail_count": 2,
+      "error_count": 1,
+      "total_notes": 2,
+      "daily_limit": 100,
+      "min_interval": 3
+    },
+    {
+      "cookie_str": "abRequestId=a93216b3-26e7-5b6a-9457-d497f5c5e069; webBuild=4.79.0; xsecappid=xhs-pc-web; a1=1991284cf97kexvjw97mxw2nqcbvonyxtlins3ms430000250902; webId=3e87fed8163661ea799d4a2504c2cf4a; gid=yjjyJY4dK89KyjjyJY4Si1q6jWTdChVEjW6C3M4EJIASDIq8hlIvCM888J28j8J8Yif8J2jd; web_session=040069b0daa63312c7897ebf8d3a4be4bd4cad; loadts=1756953272829; websectiga=29098a4cf41f76ee3f8db19051aaa60c0fc7c5e305572fec762da32d457d76ae; sec_poison_id=f21df858-b0c2-49ab-827e-926f84008260; unread={%22ub%22:%2268b4d7e6000000001d0202d2%22%2C%22ue%22:%2268ac5817000000001d00081c%22%2C%22uc%22:24}",
+      "name": "环境变量账号_1",
+      "remark": "",
+      "is_active": true,
+      "use_count": 0,
+      "success_count": 0,
+      "fail_count": 0,
+      "error_count": 0,
+      "total_notes": 0,
+      "daily_limit": 100,
+      "min_interval": 3
+    }
+  ]
+}

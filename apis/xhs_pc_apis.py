@@ -740,6 +740,9 @@ class XHS_Apis():
             # 注意：即使sub_comment_has_more为False，comment中可能已经包含了一些二级评论
             # 需要检查sub_comment_count来确定是否有二级评论
             sub_comment_count = comment.get('sub_comment_count', 0)
+            # 确保是整数类型
+            if isinstance(sub_comment_count, str):
+                sub_comment_count = int(sub_comment_count) if sub_comment_count.isdigit() else 0
             
             # 如果没有二级评论，直接返回
             if sub_comment_count == 0:
@@ -807,6 +810,9 @@ class XHS_Apis():
             for i, comment in enumerate(out_comment_list):
                 # 记录API声明的二级评论数
                 declared_count = comment.get('sub_comment_count', 0)
+                # 确保是整数类型
+                if isinstance(declared_count, str):
+                    declared_count = int(declared_count) if declared_count.isdigit() else 0
                 total_sub_comment_count += declared_count
                 
                 success, msg, new_comment = self.get_note_all_inner_comment(comment, kvDist['xsec_token'], cookies_str, proxies)

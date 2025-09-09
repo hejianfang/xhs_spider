@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie号池管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .nav-tab {
+            padding: 12px 24px;
+            background: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.3s;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .nav-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .stat-value.primary {
+            color: #667eea;
+        }
+        
+        .stat-value.success {
+            color: #10b981;
+        }
+        
+        .stat-value.warning {
+            color: #f59e0b;
+        }
+        
+        .stat-value.danger {
+            color: #ef4444;
+        }
+        
+        .stat-subtitle {
+            color: #999;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        .content-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: #d97706;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: #f9fafb;
+        }
+        
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 14px;
+            color: #4b5563;
+        }
+        
+        tbody tr:hover {
+            background: #f9fafb;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-cooling {
+            background: #fed7aa;
+            color: #92400e;
+        }
+        
+        .status-disabled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h2 {
+            color: #1f2937;
+            font-size: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #374151;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        .form-hint {
+            color: #6b7280;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: none;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .toast.show {
+            display: flex;
+        }
+        
+        .toast.success {
+            border-left: 4px solid #10b981;
+        }
+        
+        .toast.error {
+            border-left: 4px solid #ef4444;
+        }
+        
+        .toast.info {
+            border-left: 4px solid #3b82f6;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .strategy-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .strategy-selector select {
+            padding: 8px 15px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #9ca3af;
+        }
+        
+        .empty-state svg {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+            opacity: 0.3;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 50px;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部信息 -->
+        <div class="header">
+            <h1>
+                🎯 Cookie号池管理系统
+                <button class="btn btn-secondary btn-sm" onclick="goToJsonManager()">返回文件管理</button>
+            </h1>
+            <p style="color: #6b7280; margin-top: 10px;">智能管理多账号，自动轮换与限流控制</p>
+        </div>
+
+        <!-- 导航标签 -->
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchTab('overview')">📊 总览</button>
+            <button class="nav-tab" onclick="switchTab('accounts')">👥 账号管理</button>
+            <button class="nav-tab" onclick="switchTab('settings')">⚙️ 设置</button>
+        </div>
+
+        <!-- 总览标签页 -->
+        <div id="overview-tab" class="tab-content active">
+            <!-- 统计卡片 -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">总账号数</div>
+                    <div class="stat-value primary" id="total-accounts">0</div>
+                    <div class="stat-subtitle">已配置的Cookie账号</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">可用账号</div>
+                    <div class="stat-value success" id="available-accounts">0</div>
+                    <div class="stat-subtitle">当前可立即使用</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">冷却中</div>
+                    <div class="stat-value warning" id="cooling-accounts">0</div>
+                    <div class="stat-subtitle">暂时不可用</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">已禁用</div>
+                    <div class="stat-value danger" id="disabled-accounts">0</div>
+                    <div class="stat-subtitle">需要手动重置</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">今日请求</div>
+                    <div class="stat-value" id="today-requests">0</div>
+                    <div class="stat-subtitle">所有账号总计</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">成功率</div>
+                    <div class="stat-value" id="success-rate">0%</div>
+                    <div class="stat-subtitle">总体成功率</div>
+                </div>
+            </div>
+
+            <!-- 快速操作 -->
+            <div class="content-card">
+                <div class="card-header">
+                    <h3 class="card-title">快速操作</h3>
+                </div>
+                <div style="padding: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="showAddModal()">
+                        ➕ 添加账号
+                    </button>
+                    <button class="btn btn-success" onclick="showBatchAddModal()">
+                        📋 批量导入
+                    </button>
+                    <button class="btn btn-warning" onclick="resetAllCooldowns()">
+                        🔄 重置所有冷却
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportAccounts()">
+                        📥 导出配置
+                    </button>
+                    <button class="btn btn-secondary" onclick="refreshStatus()">
+                        🔄 刷新状态
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 账号管理标签页 -->
+        <div id="accounts-tab" class="tab-content">
+            <div class="content-card">
+                <div class="card-header">
+                    <h3 class="card-title">账号列表</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-primary btn-sm" onclick="showAddModal()">
+                            ➕ 添加
+                        </button>
+                        <button class="btn btn-success btn-sm" onclick="showBatchAddModal()">
+                            📋 批量导入
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="loading" class="loading">
+                    <div class="spinner"></div>
+                    <p>加载中...</p>
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>账号名称</th>
+                                <th>状态</th>
+                                <th>今日/总使用</th>
+                                <th>成功/失败</th>
+                                <th>错误次数</th>
+                                <th>最后使用</th>
+                                <th>备注</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="accounts-list">
+                            <!-- 动态生成 -->
+                        </tbody>
+                    </table>
+                    
+                    <div id="empty-accounts" class="empty-state" style="display: none;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        <h3>暂无账号</h3>
+                        <p>请添加Cookie账号开始使用</p>
+                        <button class="btn btn-primary" onclick="showAddModal()" style="margin-top: 20px;">
+                            添加第一个账号
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 设置标签页 -->
+        <div id="settings-tab" class="tab-content">
+            <div class="content-card">
+                <div class="card-header">
+                    <h3 class="card-title">轮换策略</h3>
+                </div>
+                <div style="padding: 20px;">
+                    <div class="strategy-selector">
+                        <label style="font-weight: 500;">选择策略：</label>
+                        <select id="strategy-select" onchange="updateStrategy()">
+                            <option value="round_robin">轮询 (Round Robin)</option>
+                            <option value="random">随机 (Random)</option>
+                            <option value="least_used">最少使用 (Least Used)</option>
+                        </select>
+                        <span style="color: #6b7280; font-size: 14px;">
+                            当前策略：<span id="current-strategy">轮询</span>
+                        </span>
+                    </div>
+                    <div style="margin-top: 15px; padding: 15px; background: #f9fafb; border-radius: 8px;">
+                        <p style="color: #6b7280; font-size: 14px; line-height: 1.6;">
+                            <strong>轮询：</strong>按顺序循环使用每个账号<br>
+                            <strong>随机：</strong>随机选择可用账号<br>
+                            <strong>最少使用：</strong>优先选择今日使用次数最少的账号
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-card" style="margin-top: 20px;">
+                <div class="card-header">
+                    <h3 class="card-title">限流设置</h3>
+                </div>
+                <div style="padding: 20px;">
+                    <div class="form-group">
+                        <label>每日请求限制（每个账号）</label>
+                        <input type="number" id="daily-limit" value="100" min="1" max="1000" 
+                               oninput="this.dataset.userModified = 'true'">
+                        <div class="form-hint">每个账号每天最多可以使用的次数</div>
+                    </div>
+                    <div class="form-group">
+                        <label>最小请求间隔（秒）</label>
+                        <input type="number" id="min-interval" value="3" min="1" max="60"
+                               oninput="this.dataset.userModified = 'true'">
+                        <div class="form-hint">同一账号两次请求之间的最小间隔时间</div>
+                    </div>
+                    <div class="form-group">
+                        <label>错误冷却倍数</label>
+                        <input type="number" id="cooldown-factor" value="5" min="1" max="30">
+                        <div class="form-hint">错误次数 × 倍数 = 冷却分钟数（最多60分钟）</div>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveSettings()">保存设置</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast提示 -->
+    <div id="toast" class="toast">
+        <span id="toast-message"></span>
+    </div>
+
+    <!-- 添加账号模态框 -->
+    <div id="add-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>添加Cookie账号</h2>
+            </div>
+            <div class="form-group">
+                <label>账号名称</label>
+                <input type="text" id="add-name" placeholder="例如：账号1">
+            </div>
+            <div class="form-group">
+                <label>Cookie字符串 *</label>
+                <textarea id="add-cookie" placeholder="粘贴完整的Cookie字符串..." required></textarea>
+            </div>
+            <div class="form-group">
+                <label>备注</label>
+                <input type="text" id="add-remark" placeholder="可选的备注信息">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('add-modal')">取消</button>
+                <button class="btn btn-primary" onclick="addAccount()">添加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 批量添加模态框 -->
+    <div id="batch-add-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>批量添加Cookie账号</h2>
+            </div>
+            <div class="form-group">
+                <label>批量输入</label>
+                <textarea id="batch-cookies" placeholder="每行一个账号，格式：
+账号名|Cookie字符串|备注
+或
+Cookie字符串
+
+示例：
+账号1|a1=xxx;web_session=xxx|主账号
+账号2|a1=yyy;web_session=yyy
+a1=zzz;web_session=zzz" style="min-height: 200px;"></textarea>
+                <div class="form-hint">支持三种格式：名称|Cookie|备注、名称|Cookie、仅Cookie</div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('batch-add-modal')">取消</button>
+                <button class="btn btn-primary" onclick="batchAddAccounts()">批量添加</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let poolStatus = null;
+        let refreshTimer = null;
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshStatus();
+            // 每30秒自动刷新
+            refreshTimer = setInterval(refreshStatus, 30000);
+        });
+        
+        // 切换标签
+        function switchTab(tab) {
+            // 更新标签按钮状态
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // 更新内容显示
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById(`${tab}-tab`).classList.add('active');
+            
+            if (tab === 'accounts') {
+                loadAccounts();
+            }
+        }
+        
+        // 刷新状态
+        async function refreshStatus() {
+            try {
+                const response = await fetch('/api/cookie-pool/status');
+                const data = await response.json();
+                
+                if (data.success) {
+                    poolStatus = data.data;
+                    updateOverview();
+                    updateAccountsList();
+                    updateStrategy();
+                }
+            } catch (error) {
+                console.error('刷新失败:', error);
+            }
+        }
+        
+        // 更新总览
+        function updateOverview() {
+            if (!poolStatus) return;
+            
+            document.getElementById('total-accounts').textContent = poolStatus.total_accounts;
+            document.getElementById('available-accounts').textContent = poolStatus.available_accounts;
+            
+            // 更新设置值（如果有账号的话，取第一个账号的设置作为默认值）
+            if (poolStatus.accounts && poolStatus.accounts.length > 0) {
+                const firstAccount = poolStatus.accounts[0];
+                if (document.getElementById('daily-limit') && !document.getElementById('daily-limit').dataset.userModified) {
+                    document.getElementById('daily-limit').value = firstAccount.daily_limit || 100;
+                }
+                if (document.getElementById('min-interval') && !document.getElementById('min-interval').dataset.userModified) {
+                    document.getElementById('min-interval').value = firstAccount.min_interval || 3;
+                }
+            }
+            
+            let cooling = 0;
+            let disabled = 0;
+            let todayRequests = 0;
+            let totalSuccess = 0;
+            let totalFail = 0;
+            
+            poolStatus.accounts.forEach(account => {
+                if (!account.is_active) {
+                    disabled++;
+                } else if (account.cooldown_until) {
+                    cooling++;
+                }
+                todayRequests += account.daily_use_count || 0;
+                totalSuccess += account.success_count || 0;
+                totalFail += account.fail_count || 0;
+            });
+            
+            document.getElementById('cooling-accounts').textContent = cooling;
+            document.getElementById('disabled-accounts').textContent = disabled;
+            document.getElementById('today-requests').textContent = todayRequests;
+            
+            const successRate = totalSuccess + totalFail > 0 
+                ? Math.round(totalSuccess / (totalSuccess + totalFail) * 100)
+                : 0;
+            document.getElementById('success-rate').textContent = successRate + '%';
+        }
+        
+        // 更新账号列表
+        function updateAccountsList() {
+            if (!poolStatus || !poolStatus.accounts) return;
+            
+            const tbody = document.getElementById('accounts-list');
+            const emptyState = document.getElementById('empty-accounts');
+            
+            if (poolStatus.accounts.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            
+            tbody.innerHTML = poolStatus.accounts.map(account => {
+                let statusBadge = '';
+                let statusText = '';
+                
+                if (!account.is_active) {
+                    statusBadge = 'status-disabled';
+                    statusText = '已禁用';
+                } else if (account.cooldown_until) {
+                    statusBadge = 'status-cooling';
+                    const cooldownTime = new Date(account.cooldown_until);
+                    const remaining = Math.max(0, Math.round((cooldownTime - new Date()) / 1000));
+                    statusText = `冷却中 (${remaining}s)`;
+                } else {
+                    statusBadge = 'status-active';
+                    statusText = '正常';
+                }
+                
+                const lastUse = account.last_use_time 
+                    ? new Date(account.last_use_time).toLocaleString('zh-CN')
+                    : '从未使用';
+                
+                return `
+                    <tr>
+                        <td><strong>${account.name}</strong></td>
+                        <td><span class="status-badge ${statusBadge}">${statusText}</span></td>
+                        <td>${account.daily_use_count}/${account.use_count}</td>
+                        <td>
+                            <span style="color: #10b981;">${account.success_count}</span> / 
+                            <span style="color: #ef4444;">${account.fail_count}</span>
+                        </td>
+                        <td>${account.error_count}</td>
+                        <td>${lastUse}</td>
+                        <td>${account.remark || '-'}</td>
+                        <td class="action-buttons">
+                            <button class="btn btn-warning btn-sm" onclick="resetAccount('${account.cookie_id}')">
+                                重置
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="removeAccount('${account.cookie_id}')">
+                                删除
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        // 更新策略
+        function updateStrategy() {
+            if (!poolStatus) return;
+            
+            const strategySelect = document.getElementById('strategy-select');
+            strategySelect.value = poolStatus.strategy;
+            
+            const strategyText = {
+                'round_robin': '轮询',
+                'random': '随机',
+                'least_used': '最少使用'
+            };
+            document.getElementById('current-strategy').textContent = strategyText[poolStatus.strategy] || poolStatus.strategy;
+        }
+        
+        // 加载账号列表
+        async function loadAccounts() {
+            document.getElementById('loading').classList.add('active');
+            await refreshStatus();
+            document.getElementById('loading').classList.remove('active');
+        }
+        
+        // 显示添加模态框
+        function showAddModal() {
+            document.getElementById('add-modal').classList.add('show');
+        }
+        
+        // 显示批量添加模态框
+        function showBatchAddModal() {
+            document.getElementById('batch-add-modal').classList.add('show');
+        }
+        
+        // 关闭模态框
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+            // 清空表单
+            if (modalId === 'add-modal') {
+                document.getElementById('add-name').value = '';
+                document.getElementById('add-cookie').value = '';
+                document.getElementById('add-remark').value = '';
+            } else if (modalId === 'batch-add-modal') {
+                document.getElementById('batch-cookies').value = '';
+            }
+        }
+        
+        // 添加账号
+        async function addAccount() {
+            const name = document.getElementById('add-name').value;
+            const cookieStr = document.getElementById('add-cookie').value;
+            const remark = document.getElementById('add-remark').value;
+            
+            if (!cookieStr) {
+                showToast('请输入Cookie字符串', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/cookie-pool/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        cookie_str: cookieStr,
+                        name: name,
+                        remark: remark
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('账号添加成功', 'success');
+                    closeModal('add-modal');
+                    refreshStatus();
+                } else {
+                    showToast(data.message, 'error');
+                }
+            } catch (error) {
+                showToast('添加失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 批量添加账号
+        async function batchAddAccounts() {
+            const cookiesText = document.getElementById('batch-cookies').value;
+            
+            if (!cookiesText) {
+                showToast('请输入Cookie信息', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/cookie-pool/batch-add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        cookies_text: cookiesText
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    closeModal('batch-add-modal');
+                    refreshStatus();
+                } else {
+                    showToast(data.message, 'error');
+                }
+            } catch (error) {
+                showToast('批量添加失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 重置账号
+        async function resetAccount(cookieId) {
+            if (!confirm('确定要重置此账号状态吗？')) return;
+            
+            try {
+                const response = await fetch(`/api/cookie-pool/reset/${cookieId}`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('账号已重置', 'success');
+                    refreshStatus();
+                } else {
+                    showToast(data.message, 'error');
+                }
+            } catch (error) {
+                showToast('重置失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 移除账号
+        async function removeAccount(cookieId) {
+            if (!confirm('确定要删除此账号吗？')) return;
+            
+            try {
+                const response = await fetch(`/api/cookie-pool/remove/${cookieId}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('账号已删除', 'success');
+                    refreshStatus();
+                } else {
+                    showToast(data.message, 'error');
+                }
+            } catch (error) {
+                showToast('删除失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 重置所有冷却
+        async function resetAllCooldowns() {
+            if (!confirm('确定要重置所有账号的冷却状态吗？')) return;
+            
+            if (poolStatus && poolStatus.accounts) {
+                for (const account of poolStatus.accounts) {
+                    if (account.cooldown_until || !account.is_active) {
+                        await resetAccount(account.cookie_id);
+                    }
+                }
+                showToast('所有冷却已重置', 'success');
+            }
+        }
+        
+        // 导出配置
+        function exportAccounts() {
+            if (!poolStatus || !poolStatus.accounts) {
+                showToast('没有可导出的账号', 'info');
+                return;
+            }
+            
+            const exportData = poolStatus.accounts.map(a => 
+                `${a.name}|${a.cookie_str || 'HIDDEN'}|${a.remark}`
+            ).join('\n');
+            
+            const blob = new Blob([exportData], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `cookie_pool_${new Date().getTime()}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showToast('配置已导出', 'success');
+        }
+        
+        // 保存设置
+        async function saveSettings() {
+            const dailyLimit = document.getElementById('daily-limit').value;
+            const minInterval = document.getElementById('min-interval').value;
+            
+            try {
+                const response = await fetch('/api/cookie-pool/settings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        daily_limit: parseInt(dailyLimit),
+                        min_interval: parseInt(minInterval)
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('设置已保存并应用到所有账号', 'success');
+                    refreshStatus();
+                } else {
+                    showToast(data.message, 'error');
+                }
+            } catch (error) {
+                showToast('保存失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 返回文件管理
+        function goToJsonManager() {
+            window.location.href = '/';
+        }
+        
+        // Toast提示
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            
+            toast.className = 'toast show ' + type;
+            toastMessage.textContent = message;
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

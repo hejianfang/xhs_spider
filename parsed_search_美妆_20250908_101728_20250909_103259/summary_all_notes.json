@@ -1,0 +1,75 @@
+{
+  "process_info": {
+    "source_json": "search_results/search_美妆_20250908_101728.json",
+    "total_notes": 2,
+    "successful_notes": 2,
+    "failed_notes": 0,
+    "total_comments": 0,
+    "include_comments": true,
+    "download_media": true,
+    "process_time": "2025-09-09 10:33:34"
+  },
+  "successful_notes": [
+    {
+      "note_id": "67e3c20c00000000070344f8",
+      "note_url": "https://www.xiaohongshu.com/explore/67e3c20c00000000070344f8?xsec_token=ABD0KpDPsrx0vptUR9iWWx47RByEP8eze4wzH6fdyMGWY=",
+      "note_type": "图集",
+      "user_id": "5a93895d11be10681e853fb5",
+      "home_url": "https://www.xiaohongshu.com/user/profile/5a93895d11be10681e853fb5",
+      "nickname": "鄭-",
+      "avatar": "https://sns-avatar-qc.xhscdn.com/avatar/6432ba0d47807117dee15c6b.jpg",
+      "title": "求美妆护肤代购！！！！谁懂？？！！",
+      "desc": "从开始护肤后开始就踩了不少雷多花了不少冤枉钱，也踩过不少微商代购的雷，后面看小红书上有人推荐了一个代购，我就想着试试看，买了一个产品回来，验过了都是正品哈哈哈，这个小姐姐超级好说话，我的天呐，我真的狠狠种草了!尤其是我这种学生党真的爱了好吧!!！还有很多大牌奢侈品  #大牌美妆[话题]#   #美妆护肤[话题]# #靠谱[话题]#",
+      "liked_count": "63",
+      "collected_count": "16",
+      "comment_count": "333",
+      "share_count": "17",
+      "video_cover": null,
+      "video_addr": null,
+      "image_list": [
+        "http://sns-webpic-qc.xhscdn.com/202509091033/2874e3bee5348a4a31e817824a0a14e5/1040g2sg31fg3lqvp74704a2i6h4lqftl4s1db38!nd_dft_wlteh_webp_3"
+      ],
+      "tags": [
+        "大牌美妆",
+        "美妆护肤",
+        "靠谱"
+      ],
+      "upload_time": "2025-03-26 16:59:56",
+      "ip_location": "未知",
+      "comments": [],
+      "crawl_time": "2025-09-09 10:33:29"
+    },
+    {
+      "note_id": "681c4c84000000002101a270",
+      "note_url": "https://www.xiaohongshu.com/explore/681c4c84000000002101a270?xsec_token=ABffiHgAP9c1px-eXX8YLWTcb4hMtHrFD0Avv-eTVRgkg=",
+      "note_type": "图集",
+      "user_id": "67ea0a0a000000000a03f0db",
+      "home_url": "https://www.xiaohongshu.com/user/profile/67ea0a0a000000000a03f0db",
+      "nickname": "鲜吃萝卜蛋操心",
+      "avatar": "https://sns-avatar-qc.xhscdn.com/avatar/1040g2jo31fqbuqaig0005pva1852ns6rc5m4ou0",
+      "title": "美妆撸货赚零花钱思路👀",
+      "desc": "美妆回收赚差价，真的靠谱吗?\n最近在网上看到很多人讨论美妆回收赚差价的事情，说是通过低价买入高档美妆产品，再高价卖给回收档口，从而赚取差价。听起来挺诱人的，但到底靠不靠谱呢?让我们来一探究竟。#美妆搬砖[话题]#",
+      "liked_count": "25",
+      "collected_count": "8",
+      "comment_count": "32",
+      "share_count": "3",
+      "video_cover": null,
+      "video_addr": null,
+      "image_list": [
+        "http://sns-webpic-qc.xhscdn.com/202509091033/66f4b8eed84a77955077df09287683b6/notes_pre_post/1040g3k831h79n7sh3o905pva1852ns6r50kdb28!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202509091033/c7ec9bb370776a3d834e6f31945837fd/notes_pre_post/1040g3k831h79n7sh3o9g5pva1852ns6retlomk8!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202509091033/cc2b37cfd9ccfdc6aeb15c4c47ba01ce/notes_pre_post/1040g3k831h79n7sh3oa05pva1852ns6rsbq8bso!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202509091033/75ed2fe20ba56bd5237c90ce5e6bc307/notes_pre_post/1040g3k831h79n7sh3oag5pva1852ns6rv2qsor8!nd_dft_wgth_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202509091033/3c7f33f05525277706e81957327bb8fd/notes_pre_post/1040g3k831h79n7sh3ob05pva1852ns6r3nsmjio!nd_dft_wlteh_webp_3"
+      ],
+      "tags": [
+        "美妆搬砖"
+      ],
+      "upload_time": "2025-05-08 14:17:40",
+      "ip_location": "未知",
+      "comments": [],
+      "crawl_time": "2025-09-09 10:33:33"
+    }
+  ],
+  "failed_notes": []
+}

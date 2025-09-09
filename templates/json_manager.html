@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小红书JSON文件管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .actions-bar {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .table-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .search-box {
+            position: relative;
+            width: 300px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 10px 40px 10px 15px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: #f9fafb;
+        }
+        
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 14px;
+            color: #4b5563;
+        }
+        
+        tbody tr:hover {
+            background: #f9fafb;
+        }
+        
+        .checkbox-cell {
+            width: 50px;
+        }
+        
+        .checkbox-cell input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .file-name {
+            font-weight: 500;
+            color: #1f2937;
+        }
+        
+        .keyword-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #ede9fe;
+            color: #5b21b6;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .note-count {
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 50px;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: none;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .toast.show {
+            display: flex;
+        }
+        
+        .toast.success {
+            border-left: 4px solid #10b981;
+        }
+        
+        .toast.error {
+            border-left: 4px solid #ef4444;
+        }
+        
+        .toast.info {
+            border-left: 4px solid #3b82f6;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h2 {
+            color: #1f2937;
+            font-size: 20px;
+        }
+        
+        .modal-body {
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #374151;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .form-check {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .form-check input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #9ca3af;
+        }
+        
+        .empty-state svg {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部信息 -->
+        <div class="header">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h1>📊 小红书JSON文件管理系统</h1>
+                    <p style="color: #6b7280; margin-top: 10px;">管理和解析search_results目录下的JSON文件</p>
+                </div>
+                <button class="btn btn-primary" onclick="window.location.href='/cookie-pool'" style="margin-top: 5px;">
+                    🎯 Cookie池管理
+                </button>
+            </div>
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-label">文件总数:</span>
+                    <span class="stat-value" id="total-files">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">笔记总数:</span>
+                    <span class="stat-value" id="total-notes">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">已选择:</span>
+                    <span class="stat-value" id="selected-count">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 操作栏 -->
+        <div class="actions-bar">
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary" onclick="refreshFiles()">
+                    🔄 刷新列表
+                </button>
+                <button class="btn btn-primary" onclick="parseSelected()">
+                    📊 解析选中
+                </button>
+                <button class="btn btn-success" onclick="parseAll()">
+                    🚀 解析全部
+                </button>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary" onclick="selectAll()">
+                    ✅ 全选
+                </button>
+                <button class="btn btn-secondary" onclick="unselectAll()">
+                    ❌ 取消全选
+                </button>
+            </div>
+        </div>
+
+        <!-- 表格容器 -->
+        <div class="table-container">
+            <div class="table-header">
+                <h3 style="color: #1f2937; font-size: 18px;">JSON文件列表</h3>
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="搜索文件名或关键词..." onkeyup="filterTable()">
+                </div>
+            </div>
+            
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>加载中...</p>
+            </div>
+            
+            <div id="table-content">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="checkbox-cell">
+                                <input type="checkbox" id="select-all-checkbox" onchange="toggleSelectAll()">
+                            </th>
+                            <th>文件名</th>
+                            <th>关键词</th>
+                            <th>笔记数量</th>
+                            <th>文件大小</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="file-list">
+                        <!-- 动态生成内容 -->
+                    </tbody>
+                </table>
+                
+                <div id="empty-state" class="empty-state" style="display: none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                    </svg>
+                    <h3>暂无数据</h3>
+                    <p>search_results 目录下没有找到JSON文件</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast提示 -->
+    <div id="toast" class="toast">
+        <span id="toast-message"></span>
+    </div>
+
+    <!-- 解析配置模态框 -->
+    <div id="parse-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>解析配置</h2>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>保存格式</label>
+                    <select id="save-format">
+                        <option value="all">全部 (JSON + Excel + 媒体文件)</option>
+                        <option value="excel">仅Excel</option>
+                        <option value="json">仅JSON</option>
+                        <option value="media">仅媒体文件</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>附加选项</label>
+                    <div class="form-check">
+                        <input type="checkbox" id="include-comments" checked>
+                        <label for="include-comments">包含评论数据</label>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" id="download-media" checked>
+                        <label for="download-media">下载媒体文件</label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>输出目录名称（可选）</label>
+                    <input type="text" id="output-name" placeholder="留空使用默认名称">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+                <button class="btn btn-primary" onclick="confirmParse()">开始解析</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFiles = new Set();
+        let allFiles = [];
+        let currentParseType = '';
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshFiles();
+        });
+        
+        // 刷新文件列表
+        async function refreshFiles() {
+            showLoading(true);
+            try {
+                const response = await fetch('/api/list-json-files');
+                const data = await response.json();
+                
+                if (data.success) {
+                    allFiles = data.files;
+                    renderTable(allFiles);
+                    updateStats();
+                } else {
+                    showToast('获取文件列表失败: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showToast('网络错误: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // 渲染表格
+        function renderTable(files) {
+            const tbody = document.getElementById('file-list');
+            const emptyState = document.getElementById('empty-state');
+            
+            if (files.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            tbody.innerHTML = files.map(file => `
+                <tr>
+                    <td class="checkbox-cell">
+                        <input type="checkbox" 
+                               value="${file.filename}" 
+                               onchange="toggleFileSelection('${file.filename}')"
+                               ${selectedFiles.has(file.filename) ? 'checked' : ''}>
+                    </td>
+                    <td class="file-name">${file.filename}</td>
+                    <td><span class="keyword-tag">${file.keyword || '未知'}</span></td>
+                    <td class="note-count">${file.note_count || 0}</td>
+                    <td>${formatFileSize(file.size)}</td>
+                    <td>${formatDate(file.created_time)}</td>
+                    <td class="action-buttons">
+                        <button class="btn btn-primary btn-small" onclick="parseSingle('${file.filename}')">
+                            解析
+                        </button>
+                        <button class="btn btn-secondary btn-small" onclick="viewFile('${file.filename}')">
+                            查看
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        // 更新统计信息
+        function updateStats() {
+            document.getElementById('total-files').textContent = allFiles.length;
+            
+            const totalNotes = allFiles.reduce((sum, file) => sum + (file.note_count || 0), 0);
+            document.getElementById('total-notes').textContent = totalNotes;
+            
+            document.getElementById('selected-count').textContent = selectedFiles.size;
+        }
+        
+        // 切换文件选择
+        function toggleFileSelection(filename) {
+            if (selectedFiles.has(filename)) {
+                selectedFiles.delete(filename);
+            } else {
+                selectedFiles.add(filename);
+            }
+            updateStats();
+            updateSelectAllCheckbox();
+        }
+        
+        // 全选/取消全选
+        function toggleSelectAll() {
+            const checkbox = document.getElementById('select-all-checkbox');
+            if (checkbox.checked) {
+                selectAll();
+            } else {
+                unselectAll();
+            }
+        }
+        
+        function selectAll() {
+            allFiles.forEach(file => selectedFiles.add(file.filename));
+            renderTable(allFiles);
+            updateStats();
+            document.getElementById('select-all-checkbox').checked = true;
+        }
+        
+        function unselectAll() {
+            selectedFiles.clear();
+            renderTable(allFiles);
+            updateStats();
+            document.getElementById('select-all-checkbox').checked = false;
+        }
+        
+        function updateSelectAllCheckbox() {
+            const checkbox = document.getElementById('select-all-checkbox');
+            checkbox.checked = selectedFiles.size === allFiles.length && allFiles.length > 0;
+        }
+        
+        // 搜索过滤
+        function filterTable() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const filteredFiles = allFiles.filter(file => 
+                file.filename.toLowerCase().includes(searchTerm) ||
+                (file.keyword && file.keyword.toLowerCase().includes(searchTerm))
+            );
+            renderTable(filteredFiles);
+        }
+        
+        // 解析操作
+        function parseSingle(filename) {
+            selectedFiles.clear();
+            selectedFiles.add(filename);
+            currentParseType = 'single';
+            showParseModal();
+        }
+        
+        function parseSelected() {
+            if (selectedFiles.size === 0) {
+                showToast('请先选择要解析的文件', 'info');
+                return;
+            }
+            currentParseType = 'selected';
+            showParseModal();
+        }
+        
+        function parseAll() {
+            if (allFiles.length === 0) {
+                showToast('没有可解析的文件', 'info');
+                return;
+            }
+            currentParseType = 'all';
+            showParseModal();
+        }
+        
+        // 显示解析配置模态框
+        function showParseModal() {
+            document.getElementById('parse-modal').classList.add('show');
+        }
+        
+        function closeModal() {
+            document.getElementById('parse-modal').classList.remove('show');
+        }
+        
+        // 确认解析
+        async function confirmParse() {
+            const saveFormat = document.getElementById('save-format').value;
+            const includeComments = document.getElementById('include-comments').checked;
+            const downloadMedia = document.getElementById('download-media').checked;
+            const outputName = document.getElementById('output-name').value;
+            
+            let filesToParse = [];
+            if (currentParseType === 'all') {
+                filesToParse = allFiles.map(f => f.filename);
+            } else {
+                filesToParse = Array.from(selectedFiles);
+            }
+            
+            closeModal();
+            showLoading(true);
+            showToast(`开始解析 ${filesToParse.length} 个文件...`, 'info');
+            
+            try {
+                const response = await fetch('/api/parse-json', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        files: filesToParse,
+                        save_format: saveFormat,
+                        include_comments: includeComments,
+                        download_media: downloadMedia,
+                        output_name: outputName
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast(`解析完成！成功: ${data.results.success_count}, 失败: ${data.results.failed_count}`, 'success');
+                    if (data.results.output_path) {
+                        setTimeout(() => {
+                            showToast(`输出目录: ${data.results.output_path}`, 'info');
+                        }, 2000);
+                    }
+                } else {
+                    showToast('解析失败: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showToast('网络错误: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // 查看文件内容
+        async function viewFile(filename) {
+            try {
+                const response = await fetch(`/api/view-json/${filename}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    // 可以实现一个模态框显示JSON内容
+                    console.log(data.content);
+                    showToast('已在控制台输出文件内容', 'info');
+                } else {
+                    showToast('查看失败: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showToast('网络错误: ' + error.message, 'error');
+            }
+        }
+        
+        // 工具函数
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            if (show) {
+                loading.classList.add('active');
+            } else {
+                loading.classList.remove('active');
+            }
+        }
+        
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            
+            toast.className = 'toast show ' + type;
+            toastMessage.textContent = message;
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        function formatFileSize(bytes) {
+            if (!bytes) return '未知';
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(1024));
+            return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+        }
+        
+        function formatDate(timestamp) {
+            if (!timestamp) return '未知';
+            const date = new Date(timestamp * 1000);
+            return date.toLocaleString('zh-CN');
+        }
+    </script>
+</body>
+</html>
