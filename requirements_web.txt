@@ -1,0 +1,11 @@
+# Web应用额外依赖
+Flask==2.3.3
+Flask-CORS==4.0.0
+
+# 原有爬虫依赖
+requests
+PyExecJS
+loguru
+python-dotenv
+retry
+openpyxl

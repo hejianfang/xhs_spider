@@ -1,0 +1,62 @@
+{
+  "search_info": {
+    "query": "美妆",
+    "require_num": 2,
+    "actual_num": 2,
+    "sort_type": 0,
+    "note_type": 0,
+    "note_time": 0,
+    "note_range": 0,
+    "pos_distance": 0,
+    "geo": null,
+    "search_time": "2025-09-08 10:17:28"
+  },
+  "notes": [
+    {
+      "note_id": "67e3c20c00000000070344f8",
+      "title": "求美妆护肤代购！！！！谁懂？？！！",
+      "desc": "",
+      "note_type": "normal",
+      "xsec_token": "ABD0KpDPsrx0vptUR9iWWx47RByEP8eze4wzH6fdyMGWY=",
+      "note_url": "https://www.xiaohongshu.com/explore/67e3c20c00000000070344f8?xsec_token=ABD0KpDPsrx0vptUR9iWWx47RByEP8eze4wzH6fdyMGWY=",
+      "user_id": "5a93895d11be10681e853fb5",
+      "user_nickname": "鄭-",
+      "user_avatar": "https://sns-avatar-qc.xhscdn.com/avatar/6432ba0d47807117dee15c6b.jpg?imageView2/2/w/80/format/jpg",
+      "interact_info": {
+        "liked_count": 61,
+        "collected_count": 15,
+        "comment_count": 331,
+        "share_count": 16
+      },
+      "cover": {
+        "url": "http://sns-webpic-qc.xhscdn.com/202509081017/d9c6cfa16eb9b4c4a41b7c7a1faa2d2f/1040g2sg31fg3lqvp74704a2i6h4lqftl4s1db38!nc_n_webp_mw_1",
+        "info_list": []
+      },
+      "search_time": "2025-09-08 10:17:28",
+      "search_query": "美妆"
+    },
+    {
+      "note_id": "681c4c84000000002101a270",
+      "title": "美妆撸货赚零花钱思路👀",
+      "desc": "",
+      "note_type": "normal",
+      "xsec_token": "ABffiHgAP9c1px-eXX8YLWTcb4hMtHrFD0Avv-eTVRgkg=",
+      "note_url": "https://www.xiaohongshu.com/explore/681c4c84000000002101a270?xsec_token=ABffiHgAP9c1px-eXX8YLWTcb4hMtHrFD0Avv-eTVRgkg=",
+      "user_id": "67ea0a0a000000000a03f0db",
+      "user_nickname": "鲜吃萝卜蛋操心",
+      "user_avatar": "https://sns-avatar-qc.xhscdn.com/avatar/1040g2jo31fqbuqaig0005pva1852ns6rc5m4ou0?imageView2/2/w/80/format/jpg",
+      "interact_info": {
+        "liked_count": 25,
+        "collected_count": 8,
+        "comment_count": 32,
+        "share_count": 3
+      },
+      "cover": {
+        "url": "http://sns-webpic-qc.xhscdn.com/202509081017/b8398c11b99e3d9936c00bca393f2bb1/notes_pre_post/1040g3k831h79n7sh3o905pva1852ns6r50kdb28!nc_n_webp_mw_1",
+        "info_list": []
+      },
+      "search_time": "2025-09-08 10:17:28",
+      "search_query": "美妆"
+    }
+  ]
+}
