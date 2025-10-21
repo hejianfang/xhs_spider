@@ -1,0 +1,87 @@
+{
+  "process_info": {
+    "source_json": "search_results/data_converted_sorted.json",
+    "total_notes": 2,
+    "successful_notes": 2,
+    "failed_notes": 0,
+    "total_comments": 473,
+    "include_comments": true,
+    "download_media": false,
+    "process_time": "2025-10-21 11:05:55",
+    "comment_storage": "JSONL files (*.jsonl)"
+  },
+  "successful_notes": [
+    {
+      "note_id": "68e416780000000004012600",
+      "note_url": "https://www.xiaohongshu.com/explore/68e416780000000004012600?app_platform=ios&app_version=8.86&share_from_user_hidden=true&xsec_source=app_share&type=video&xsec_token=CBBM8faEJebh4KLmmXvIzwgvcJOHQFWny75baRGIcUtds=&author_share=1&xhsshare=CopyLink&shareRed",
+      "note_type": "视频",
+      "user_id": "5c2d3f22000000000600670f",
+      "home_url": "https://www.xiaohongshu.com/user/profile/5c2d3f22000000000600670f",
+      "nickname": "Wonderland.中文版",
+      "avatar": "https://sns-avatar-qc.xhscdn.com/avatar/682ac37abdd6770001b0d870.jpg",
+      "title": "见证历史！Matthieu Blazy把CHANEL变得好酷",
+      "desc": "巴黎的中秋，香奈儿呈现2026春夏系列将巴黎大皇宫打造成浩瀚宇宙。寰宇之下创意总监Matthieu Blazy带领着CHANEL步入全新的时代。Matthie以一个更加自由、年轻、时髦的视角，诠释他眼中Gabrielle Chanel女士“遵循舒适、简约与自由行动的原则。”\n#小红书时装周群聊[话题]# #CHANEL[话题]# #MatthieuBlazy[话题]# #Wonderland中文版[话题]# #RedFaceOfFashion100[话题]# #正在秀场[话题]#",
+      "liked_count": "574",
+      "collected_count": "85",
+      "comment_count": 131,
+      "share_count": "116",
+      "video_cover": "http://sns-webpic-qc.xhscdn.com/202510211103/1762e2e4c45d1bd8e5d7e9011c7f647a/spectrum/1040g34o31nadvi904q0g5n1d7sh1gpofb0jk25o!nd_dft_wlteh_webp_3",
+      "video_addr": "https://sns-video-bd.xhscdn.com/spectrum/1040g2f031nadoir54s005n1d7sh1gpofe32hmj0",
+      "image_list": [
+        "http://sns-webpic-qc.xhscdn.com/202510211103/1762e2e4c45d1bd8e5d7e9011c7f647a/spectrum/1040g34o31nadvi904q0g5n1d7sh1gpofb0jk25o!nd_dft_wlteh_webp_3"
+      ],
+      "tags": [
+        "小红书时装周群聊",
+        "CHANEL",
+        "MatthieuBlazy",
+        "Wonderland中文版",
+        "RedFaceOfFashion100",
+        "正在秀场"
+      ],
+      "upload_time": "2025-10-07 03:20:24",
+      "ip_location": "北京",
+      "crawl_time": "2025-10-21 11:03:38",
+      "comments_file": "parsed_data_converted_sorted_20251021_110336/note_68e416780000000004012600_comments.jsonl"
+    },
+    {
+      "note_id": "68d9f63b000000001201deab",
+      "note_url": "https://www.xiaohongshu.com/explore/68d9f63b000000001201deab?app_platform=ios&app_version=9.4&share_from_user_hidden=true&xsec_source=app_share&type=normal&xsec_token=CBrGTCtHs74eKIsj5-x2OyzW9Oh6DE_WMyOWtsC6xpDcM=&author_share=1&xhsshare=WeixinSession&shareRedId=N0o7ODs4STs2NzUyOTgwNjY0OTc5ODhL&apptime=1760745609&share_id=6d98ac057d7d433ca19a2fbb908237c0",
+      "note_type": "图集",
+      "user_id": "5ab364d211be1077654f9c05",
+      "home_url": "https://www.xiaohongshu.com/user/profile/5ab364d211be1077654f9c05",
+      "nickname": "VOGUE服饰与美容",
+      "avatar": "https://sns-avatar-qc.xhscdn.com/avatar/649bd1b2c1787f0001ec13e3.jpg",
+      "title": "白鹿、鞠婧祎、唐嫣…一周穿搭TOP5👸",
+      "desc": "本周上榜：\n\t\n👸白鹿\n白鹿这身造型，穿出了黑色本身的气场。选择了一身all black穿搭：抹胸A字连衣裙，以缎带拼接丝绒形成材质碰撞，搭配亮面漆皮手套、高跟鞋与银色chocker。多层次的锐利光泽质感，巧妙打破全黑造型的沉闷。\nTotal：Emporio Armani\n\t\n👸鞠婧祎\n鞠婧祎把“大海”穿身上？VERSACE这条褶皱裙装，像是带有不规则海浪形态的压褶设计。搭配金色臂环、灰蓝眼妆与公主切直发妆造，让整体氛围兼具神秘感与时髦张力。\nTotal：VERSACE\n\t\n👸唐嫣\n想要显气质就选择顺色搭配。唐嫣这身棕咖色西服套装，深棕色缎面翻领打破刻板，与同色系渐变手提包相呼应；搭配浅咖色露肤V领内搭与经典老花高跟鞋。高级、干练不失优雅。\nTotal：FENDI\n\t\n👸张婧仪\n张婧仪和BURBERRY风格适配度100%。英伦基因的当代转化需要些许叛逆因子，这套用做旧皮革风衣解构传统，黄色格纹衬衫与标志手袋在创新中保有经典。牛血红与金色配饰的碰撞则注入了街头的鲜活风格。\nTotal：BURBERRY\n\t\n👸贺聪\n落跑粉红女郎即视感。贺聪一袭粉色连衣裙出席GUCCI大秀，袖口、裙边用羽饰弱化单一色彩的直白。钻饰包与裸色高跟鞋的搭配增加了造型大气奢华的美感。量感银色长耳饰则在梦幻中展现锋利与现代气息。\nTotal：GUCCI\n\t\n#白鹿[话题]# #鞠婧祎[话题]# #唐嫣[话题]# #张婧仪[话题]# #贺聪[话题]# #时尚穿搭[话题]# #女明星穿搭[话题]# #vogue[话题]# #你最喜欢谁的穿搭？[投票]#",
+      "liked_count": "4815",
+      "collected_count": "634",
+      "comment_count": 342,
+      "share_count": "2023",
+      "video_cover": null,
+      "video_addr": null,
+      "image_list": [
+        "http://sns-webpic-qc.xhscdn.com/202510211104/d864a445fac062937b3efde1555d46a9/notes_pre_post/1040g3k031n0h00k552004a3qa7id5705mam45pg!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202510211104/a8099808e10470c8eed2bf7ceff57ecd/notes_pre_post/1040g3k031n0h00k5520g4a3qa7id5705hsmb8v8!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202510211104/b6ccf546d6ca6f3c59c928a37c8ba67a/notes_pre_post/1040g3k031n0h00k552104a3qa7id5705mrkkbsg!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202510211104/0394528cf19a7a4437d0d08eead2641e/notes_pre_post/1040g3k031n0h00k5521g4a3qa7id570572pg2b0!nd_dft_wlteh_webp_3",
+        "http://sns-webpic-qc.xhscdn.com/202510211104/491a95cd8dc56e37eef0193224ee2c86/notes_pre_post/1040g3k031n0h00k552204a3qa7id5705rfdi468!nd_dft_wlteh_webp_3"
+      ],
+      "tags": [
+        "白鹿",
+        "鞠婧祎",
+        "唐嫣",
+        "张婧仪",
+        "贺聪",
+        "时尚穿搭",
+        "女明星穿搭",
+        "vogue",
+        "你最喜欢谁的穿搭？"
+      ],
+      "upload_time": "2025-09-29 11:00:11",
+      "ip_location": "北京",
+      "crawl_time": "2025-10-21 11:04:00",
+      "comments_file": "parsed_data_converted_sorted_20251021_110336/note_68d9f63b000000001201deab_comments.jsonl"
+    }
+  ],
+  "failed_notes": []
+}

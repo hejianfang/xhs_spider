@@ -107,7 +107,7 @@ def main():
     # 启动Flask应用
     try:
         from web_interface import app
-        app.run(debug=False, host='0.0.0.0', port=5001)
+        app.run(debug=True, host='0.0.0.0', port=5001)
     except KeyboardInterrupt:
         print("\n👋 服务已停止")
     except Exception as e:

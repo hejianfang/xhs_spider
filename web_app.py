@@ -538,6 +538,6 @@ if __name__ == '__main__':
         os.makedirs(static_dir)
     
     logger.info("🚀 启动小红书数据爬取Web应用")
-    logger.info("📱 访问地址: http://localhost:8080")
-    
-    app.run(debug=True, host='0.0.0.0', port=8080)
+    logger.info("📱 访问地址: http://localhost:8888")
+
+    app.run(debug=True, host='0.0.0.0', port=8888)

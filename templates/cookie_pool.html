@@ -731,7 +731,7 @@ a1=zzz;web_session=zzz" style="min-height: 200px;"></textarea>
                     poolStatus = data.data;
                     updateOverview();
                     updateAccountsList();
-                    updateStrategy();
+                    loadStrategyDisplay();
                 }
             } catch (error) {
                 console.error('刷新失败:', error);
@@ -844,13 +844,58 @@ a1=zzz;web_session=zzz" style="min-height: 200px;"></textarea>
             }).join('');
         }
         
-        // 更新策略
-        function updateStrategy() {
+        // 更新策略（当用户改变选择时）
+        async function updateStrategy() {
+            const strategySelect = document.getElementById('strategy-select');
+            const newStrategy = strategySelect.value;
+
+            try {
+                const response = await fetch('/api/cookie-pool/strategy', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        strategy: newStrategy
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const strategyText = {
+                        'round_robin': '轮询',
+                        'random': '随机',
+                        'least_used': '最少使用'
+                    };
+                    document.getElementById('current-strategy').textContent = strategyText[newStrategy] || newStrategy;
+                    showToast('策略已更新为：' + strategyText[newStrategy], 'success');
+
+                    // 刷新状态
+                    await refreshStatus();
+                } else {
+                    showToast('更新策略失败：' + result.message, 'error');
+                    // 恢复为原来的策略
+                    if (poolStatus) {
+                        strategySelect.value = poolStatus.strategy;
+                    }
+                }
+            } catch (error) {
+                showToast('更新策略失败：' + error.message, 'error');
+                // 恢复为原来的策略
+                if (poolStatus) {
+                    strategySelect.value = poolStatus.strategy;
+                }
+            }
+        }
+
+        // 从服务器加载策略并显示（初始化时使用）
+        function loadStrategyDisplay() {
             if (!poolStatus) return;
-            
+
             const strategySelect = document.getElementById('strategy-select');
             strategySelect.value = poolStatus.strategy;
-            
+
             const strategyText = {
                 'round_robin': '轮询',
                 'random': '随机',

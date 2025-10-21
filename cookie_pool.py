@@ -22,14 +22,15 @@ class CookieAccount:
     def __init__(self, cookie_str: str, name: str = None, remark: str = ""):
         """
         初始化Cookie账号
-        
+
         Args:
             cookie_str: Cookie字符串
             name: 账号名称/标识
             remark: 备注信息
         """
-        self.cookie_str = cookie_str
-        self.cookie_id = self._generate_id(cookie_str)
+        # 自动清理Cookie字符串前后的空白字符（包括换行符、空格等）
+        self.cookie_str = cookie_str.strip() if cookie_str else ""
+        self.cookie_id = self._generate_id(self.cookie_str)
         self.name = name or f"账号_{self.cookie_id[:8]}"
         self.remark = remark
         

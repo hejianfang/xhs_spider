@@ -1,0 +1,53 @@
+{
+  "process_info": {
+    "source_json": "search_results/data_converted_sorted.json",
+    "total_notes": 2,
+    "successful_notes": 1,
+    "failed_notes": 1,
+    "total_comments": 10,
+    "include_comments": true,
+    "download_media": false,
+    "process_time": "2025-10-21 10:37:23",
+    "comment_storage": "JSONL files (*.jsonl)"
+  },
+  "successful_notes": [
+    {
+      "note_id": "68e416780000000004012600",
+      "note_url": "https://www.xiaohongshu.com/explore/68e416780000000004012600?app_platform=ios&app_version=8.86&share_from_user_hidden=true&xsec_source=app_share&type=video&xsec_token=CBBM8faEJebh4KLmmXvIzwgvcJOHQFWny75baRGIcUtds=&author_share=1&xhsshare=CopyLink&shareRed",
+      "note_type": "视频",
+      "user_id": "5c2d3f22000000000600670f",
+      "home_url": "https://www.xiaohongshu.com/user/profile/5c2d3f22000000000600670f",
+      "nickname": "Wonderland.中文版",
+      "avatar": "https://sns-avatar-qc.xhscdn.com/avatar/682ac37abdd6770001b0d870.jpg",
+      "title": "见证历史！Matthieu Blazy把CHANEL变得好酷",
+      "desc": "巴黎的中秋，香奈儿呈现2026春夏系列将巴黎大皇宫打造成浩瀚宇宙。寰宇之下创意总监Matthieu Blazy带领着CHANEL步入全新的时代。Matthie以一个更加自由、年轻、时髦的视角，诠释他眼中Gabrielle Chanel女士“遵循舒适、简约与自由行动的原则。”\n#小红书时装周群聊[话题]# #CHANEL[话题]# #MatthieuBlazy[话题]# #Wonderland中文版[话题]# #RedFaceOfFashion100[话题]# #正在秀场[话题]#",
+      "liked_count": "574",
+      "collected_count": "85",
+      "comment_count": 10,
+      "share_count": "116",
+      "video_cover": "http://sns-webpic-qc.xhscdn.com/202510211037/8273d03be34554df214e82e225e2f99b/spectrum/1040g34o31nadvi904q0g5n1d7sh1gpofb0jk25o!nd_dft_wlteh_webp_3",
+      "video_addr": "https://sns-video-bd.xhscdn.com/spectrum/1040g2f031nadoir54s005n1d7sh1gpofe32hmj0",
+      "image_list": [
+        "http://sns-webpic-qc.xhscdn.com/202510211037/8273d03be34554df214e82e225e2f99b/spectrum/1040g34o31nadvi904q0g5n1d7sh1gpofb0jk25o!nd_dft_wlteh_webp_3"
+      ],
+      "tags": [
+        "小红书时装周群聊",
+        "CHANEL",
+        "MatthieuBlazy",
+        "Wonderland中文版",
+        "RedFaceOfFashion100",
+        "正在秀场"
+      ],
+      "upload_time": "2025-10-07 03:20:24",
+      "ip_location": "北京",
+      "crawl_time": "2025-10-21 10:37:22",
+      "comments_file": "parsed_data_converted_sorted_20251021_103721/note_68e416780000000004012600_comments.jsonl"
+    }
+  ],
+  "failed_notes": [
+    {
+      "url": "https://www.xiaohongshu.com/explore/68d9f63b000000001201deab?app_platform=ios&app_version=9.4&share_from_user_hidden=true&xsec_source=app_share&type=normal&xsec_token=CBrGTCtHs74eKIsj5-x2OyzW9Oh6DE_WMyOWtsC6xpDcM=&author_share=1&xhsshare=WeixinSession&shareRedId=N0o7ODs4STs2NzUyOTgwNjY0OTc5ODhL&apptime=1760745609&share_id=6d98ac057d7d433ca19a2fbb908237c0",
+      "error": "获取笔记信息失败: 所有Cookie账号(2个)均失败"
+    }
+  ]
+}

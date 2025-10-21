@@ -10,6 +10,7 @@ from flask import Flask, render_template, jsonify, request
 import os
 import json
 import time
+import sys
 from datetime import datetime
 from pathlib import Path
 from xhs_utils.common_util import init
@@ -17,6 +18,29 @@ from json_to_full_data import JsonToFullData
 from typing import Dict, List, Any
 from cookie_pool import cookie_pool, initialize_pool_from_env
 from loguru import logger
+
+# 配置日志输出
+logger.remove()  # 移除默认handler
+logger.add(
+    sys.stderr,
+    format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan> - <level>{message}</level>",
+    level="INFO"
+)
+# 创建logs目录
+os.makedirs("logs", exist_ok=True)
+# 添加文件输出
+logger.add(
+    "logs/web_interface.log",
+    rotation="10 MB",  # 日志文件达到10MB时轮转
+    retention="7 days",  # 保留7天的日志
+    encoding="utf-8",
+    level="DEBUG",
+    format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}"
+)
+
+logger.info("=" * 60)
+logger.info("小红书JSON文件管理系统启动中...")
+logger.info("=" * 60)
 
 app = Flask(__name__)
 
@@ -26,12 +50,16 @@ TEMPLATES_DIR = "templates"
 
 # 初始化环境
 cookies_str, base_path = init()
+logger.info("环境初始化完成")
 
 # 初始化Cookie池
 initialize_pool_from_env()
 if not cookie_pool.accounts and cookies_str:
     # 如果池为空但有默认Cookie，添加到池中
     cookie_pool.add_account(cookies_str, "默认账号", "从.env文件加载")
+    logger.info("已从.env文件加载默认Cookie账号")
+else:
+    logger.info(f"Cookie池已加载 {len(cookie_pool.accounts)} 个账号")
 
 @app.route('/')
 def index():
@@ -92,7 +120,7 @@ def list_json_files():
                 files_info.append(file_info)
                 
             except Exception as e:
-                print(f"处理文件 {json_file} 时出错: {e}")
+                logger.warning(f"处理文件 {json_file} 时出错: {e}")
                 continue
         
         # 按创建时间排序（最新的在前）
@@ -154,16 +182,19 @@ def parse_json():
         include_comments = data.get('include_comments', True)
         download_media = data.get('download_media', True)
         output_name = data.get('output_name', '')
-        
+
+        logger.info(f"开始解析任务: 文件数={len(files_to_parse)}, 格式={save_format}, 评论={include_comments}, 媒体={download_media}")
+
         if not files_to_parse:
             return jsonify({
                 'success': False,
                 'message': '没有选择要解析的文件'
             }), 400
-        
-        # 创建解析器实例
-        parser = JsonToFullData()
-        
+
+        # 创建解析器实例，传入Cookie池
+        parser = JsonToFullData(cookie_pool=cookie_pool)
+        logger.info(f"解析器已初始化，Cookie池状态: {len(cookie_pool.accounts)} 个账号")
+
         # 统计结果
         results = {
             'success_count': 0,
@@ -171,20 +202,22 @@ def parse_json():
             'failed_files': [],
             'output_paths': []
         }
-        
+
         # 批量处理文件
         for filename in files_to_parse:
             try:
+                logger.info(f"正在处理文件: {filename}")
                 json_path = os.path.join(SEARCH_RESULTS_DIR, filename)
-                
+
                 if not os.path.exists(json_path):
+                    logger.error(f"文件不存在: {filename}")
                     results['failed_count'] += 1
                     results['failed_files'].append({
                         'filename': filename,
                         'error': '文件不存在'
                     })
                     continue
-                
+
                 # 生成输出目录名
                 if output_name:
                     output_dir = output_name
@@ -193,39 +226,42 @@ def parse_json():
                     base_name = Path(filename).stem
                     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                     output_dir = f"parsed_{base_name}_{timestamp}"
-                
-                # 从号池获取可用账号
-                account = cookie_pool.get_available_account()
-                if not account:
+
+                # 检查Cookie池是否有可用账号
+                if len(cookie_pool.accounts) == 0:
+                    logger.error(f"Cookie池中没有可用账号")
                     results['failed_count'] += 1
                     results['failed_files'].append({
                         'filename': filename,
                         'error': '没有可用的Cookie账号，请检查号池'
                     })
                     continue
-                
-                # 调用解析函数
+
+                logger.info(f"开始解析文件，Cookie池将自动重试所有账号")
+
+                # 调用解析函数（内部会自动使用Cookie池重试）
                 try:
                     success, message, stats = parser.process_json_to_full_data(
                         json_file_path=json_path,
-                        cookies_str=account.cookie_str,
+                        cookies_str=None,  # 不再需要手动传Cookie，由Cookie池管理
                         output_dir=output_dir,
                         include_comments=include_comments,
                         download_media=download_media,
                         save_format=save_format
                     )
-                    
-                    # 根据结果更新账号状态
+
                     if success:
                         notes_count = stats.get('total_notes', 0) if isinstance(stats, dict) else 1
-                        cookie_pool.mark_account_success(account.cookie_id, notes_count)
+                        comments_count = stats.get('total_comments', 0)
+                        logger.info(f"文件 {filename} 解析成功: 共{notes_count}条笔记, {comments_count}条评论")
                     else:
-                        cookie_pool.mark_account_error(account.cookie_id, message)
-                        
+                        logger.error(f"文件 {filename} 解析失败: {message}")
+
                 except Exception as e:
-                    cookie_pool.mark_account_error(account.cookie_id, str(e))
-                    raise
-                
+                    logger.error(f"文件 {filename} 解析异常: {e}")
+                    success = False
+                    message = str(e)
+
                 if success:
                     results['success_count'] += 1
                     results['output_paths'].append(output_dir)
@@ -242,8 +278,9 @@ def parse_json():
                     'filename': filename,
                     'error': str(e)
                 })
-        
+
         # 返回结果
+        logger.info(f"解析任务完成: 成功 {results['success_count']} 个, 失败 {results['failed_count']} 个")
         return jsonify({
             'success': True,
             'results': results,
@@ -373,21 +410,23 @@ def add_cookie():
         cookie_str = data.get('cookie_str', '')
         name = data.get('name', '')
         remark = data.get('remark', '')
-        
+
         if not cookie_str:
             return jsonify({
                 'success': False,
                 'message': 'Cookie不能为空'
             }), 400
-        
+
         success = cookie_pool.add_account(cookie_str, name, remark)
-        
+
         if success:
+            logger.info(f"添加Cookie账号成功: {name}")
             return jsonify({
                 'success': True,
                 'message': '账号添加成功'
             })
         else:
+            logger.warning(f"添加Cookie账号失败 (已存在): {name}")
             return jsonify({
                 'success': False,
                 'message': '账号已存在'
@@ -583,18 +622,19 @@ def main():
     # 确保必要的目录存在
     os.makedirs(SEARCH_RESULTS_DIR, exist_ok=True)
     os.makedirs(TEMPLATES_DIR, exist_ok=True)
-    
+
     # 启动Flask应用
-    print("\n" + "="*50)
-    print("🚀 小红书搜索结果管理系统启动中...")
-    print("="*50)
-    print(f"📁 搜索结果目录: {os.path.abspath(SEARCH_RESULTS_DIR)}")
-    print(f"🔧 Cookie配置状态: {'已配置' if cookies_str else '未配置'}")
-    print("="*50)
-    print("🌐 访问地址: http://localhost:5001")
-    print("💡 提示: 按 Ctrl+C 停止服务")
-    print("="*50 + "\n")
-    
+    logger.info("=" * 50)
+    logger.info("🚀 小红书搜索结果管理系统启动中...")
+    logger.info("=" * 50)
+    logger.info(f"📁 搜索结果目录: {os.path.abspath(SEARCH_RESULTS_DIR)}")
+    logger.info(f"🔧 Cookie配置状态: {'已配置' if cookies_str else '未配置'}")
+    logger.info(f"📝 日志文件: logs/web_interface.log")
+    logger.info("=" * 50)
+    logger.info("🌐 访问地址: http://localhost:5001")
+    logger.info("💡 提示: 按 Ctrl+C 停止服务")
+    logger.info("=" * 50)
+
     app.run(debug=True, host='0.0.0.0', port=5001)
 
 if __name__ == '__main__':

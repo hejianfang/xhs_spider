@@ -3,8 +3,23 @@ import json
 import re
 import urllib
 import requests
+import time
+from retry import retry
+from requests.exceptions import ConnectionError, Timeout, RequestException
 from xhs_utils.xhs_util import splice_str, generate_request_params, generate_x_b3_traceid, get_common_headers
 from loguru import logger
+
+# ==================== 配置常量 ====================
+
+# 子评论获取配置
+SUB_COMMENT_MAX_RETRIES = 5           # 遇到限流时的最大重试次数（切换Cookie）
+SUB_COMMENT_RETRY_WAIT = 10           # 所有Cookie都限流时的等待时间(秒)
+SUB_COMMENT_REQUEST_INTERVAL = 3      # 分页请求间隔(秒)，与Cookie池min_interval保持一致
+
+# API错误码
+API_CODE_RATE_LIMITED = 300013        # 访问频次异常
+
+# ==================================================
 
 """
     获小红书的api
@@ -13,6 +28,50 @@ from loguru import logger
 class XHS_Apis():
     def __init__(self):
         self.base_url = "https://edith.xiaohongshu.com"
+
+    @staticmethod
+    @retry(exceptions=(ConnectionError, Timeout), tries=3, delay=2, backoff=2, logger=logger)
+    def _request_with_retry(method, url, **kwargs):
+        """
+        带重试机制的HTTP请求
+
+        :param method: 请求方法 ('GET' 或 'POST')
+        :param url: 请求URL
+        :param kwargs: requests库的其他参数
+        :return: Response对象
+        """
+        try:
+            if method.upper() == 'GET':
+                response = requests.get(url, **kwargs)
+            else:
+                response = requests.post(url, **kwargs)
+            return response
+        except (ConnectionError, Timeout) as e:
+            logger.warning(f"网络请求失败，正在重试: {e}")
+            raise  # 让retry装饰器处理重试
+
+    @staticmethod
+    def _parse_url_params(query_string: str) -> dict:
+        """
+        安全地解析URL的query参数
+
+        :param query_string: URL的query部分
+        :return: 参数字典
+        """
+        kvDist = {}
+        if not query_string:
+            return kvDist
+
+        kvs = query_string.split('&')
+        for kv in kvs:
+            if not kv:  # 跳过空字符串
+                continue
+            parts = kv.split('=')
+            if len(parts) >= 2:
+                kvDist[parts[0]] = parts[1]
+            elif len(parts) == 1:
+                kvDist[parts[0]] = ''  # 没有值的参数设为空字符串
+        return kvDist
 
     def get_homefeed_all_channel(self, cookies_str: str, proxies: dict = None):
         """
@@ -204,10 +263,9 @@ class XHS_Apis():
         try:
             urlParse = urllib.parse.urlparse(user_url)
             user_id = urlParse.path.split("/")[-1]
-            kvs = urlParse.query.split('&')
-            kvDist = {kv.split('=')[0]: kv.split('=')[1] for kv in kvs}
-            xsec_token = kvDist['xsec_token'] if 'xsec_token' in kvDist else ""
-            xsec_source = kvDist['xsec_source'] if 'xsec_source' in kvDist else "pc_search"
+            kvDist = self._parse_url_params(urlParse.query)
+            xsec_token = kvDist.get('xsec_token', '')
+            xsec_source = kvDist.get('xsec_source', 'pc_search')
             while True:
                 success, msg, res_json = self.get_user_note_info(user_id, cursor, cookies_str, xsec_token, xsec_source, proxies)
                 if not success:
@@ -266,10 +324,9 @@ class XHS_Apis():
         try:
             urlParse = urllib.parse.urlparse(user_url)
             user_id = urlParse.path.split("/")[-1]
-            kvs = urlParse.query.split('&')
-            kvDist = {kv.split('=')[0]: kv.split('=')[1] for kv in kvs}
-            xsec_token = kvDist['xsec_token'] if 'xsec_token' in kvDist else ""
-            xsec_source = kvDist['xsec_source'] if 'xsec_source' in kvDist else "pc_user"
+            kvDist = self._parse_url_params(urlParse.query)
+            xsec_token = kvDist.get('xsec_token', '')
+            xsec_source = kvDist.get('xsec_source', 'pc_user')
             while True:
                 success, msg, res_json = self.get_user_like_note_info(user_id, cursor, cookies_str, xsec_token,
                                                                       xsec_source, proxies)
@@ -329,10 +386,9 @@ class XHS_Apis():
         try:
             urlParse = urllib.parse.urlparse(user_url)
             user_id = urlParse.path.split("/")[-1]
-            kvs = urlParse.query.split('&')
-            kvDist = {kv.split('=')[0]: kv.split('=')[1] for kv in kvs}
-            xsec_token = kvDist['xsec_token'] if 'xsec_token' in kvDist else ""
-            xsec_source = kvDist['xsec_source'] if 'xsec_source' in kvDist else "pc_search"
+            kvDist = self._parse_url_params(urlParse.query)
+            xsec_token = kvDist.get('xsec_token', '')
+            xsec_source = kvDist.get('xsec_source', 'pc_search')
             while True:
                 success, msg, res_json = self.get_user_collect_note_info(user_id, cursor, cookies_str, xsec_token,
                                                                          xsec_source, proxies)
@@ -363,8 +419,7 @@ class XHS_Apis():
         try:
             urlParse = urllib.parse.urlparse(url)
             note_id = urlParse.path.split("/")[-1]
-            kvs = urlParse.query.split('&')
-            kvDist = {kv.split('=')[0]: kv.split('=')[1] for kv in kvs}
+            kvDist = self._parse_url_params(urlParse.query)
             api = f"/api/sns/web/v1/feed"
             data = {
                 "source_note_id": note_id,
@@ -380,7 +435,8 @@ class XHS_Apis():
                 "xsec_token": kvDist['xsec_token']
             }
             headers, cookies, data = generate_request_params(cookies_str, api, data)
-            response = requests.post(self.base_url + api, headers=headers, data=data, cookies=cookies, proxies=proxies)
+            # 使用带重试机制的请求方法
+            response = self._request_with_retry('POST', self.base_url + api, headers=headers, data=data, cookies=cookies, proxies=proxies)
             res_json = response.json()
             success, msg = res_json["success"], res_json["msg"]
         except Exception as e:
@@ -633,12 +689,29 @@ class XHS_Apis():
             }
             splice_api = splice_str(api, params)
             headers, cookies, data = generate_request_params(cookies_str, splice_api)
+
+            # 添加详细的调试日志
+            logger.debug(f"评论API请求URL: {self.base_url + splice_api}")
+            logger.debug(f"请求参数: note_id={note_id}, cursor={cursor}, xsec_token={xsec_token[:20]}...")
+
             response = requests.get(self.base_url + splice_api, headers=headers, cookies=cookies, proxies=proxies)
+
+            # 记录响应状态
+            logger.debug(f"HTTP状态码: {response.status_code}")
+
             res_json = response.json()
             success, msg = res_json["success"], res_json["msg"]
+
+            # 如果data为空，记录更详细信息
+            if res_json.get("data") == {}:
+                logger.warning(f"评论API返回data为空！笔记ID: {note_id}, xsec_token前20位: {xsec_token[:20]}")
+                logger.warning(f"完整响应: {res_json}")
+                logger.warning("可能原因: 1)Cookie权限不足 2)xsec_token过期 3)笔记评论被限制 4)需要额外参数")
+
         except Exception as e:
             success = False
             msg = str(e)
+            logger.error(f"评论请求异常: {e}")
         return success, msg, res_json
 
     def get_note_all_out_comment(self, note_id: str, xsec_token: str, cookies_str: str, proxies: dict = None):
@@ -659,6 +732,16 @@ class XHS_Apis():
                 if not success:
                     logger.error(f"获取评论失败: {msg}")
                     raise Exception(msg)
+
+                # 检查返回数据结构
+                if not res_json or "data" not in res_json:
+                    logger.error(f"API返回数据异常: {res_json}")
+                    raise Exception("API返回数据格式错误，缺少data字段")
+
+                if "comments" not in res_json["data"]:
+                    logger.error(f"API返回的data中没有comments字段，完整返回: {res_json}")
+                    raise Exception("API返回数据格式错误，缺少comments字段")
+
                 comments = res_json["data"]["comments"]
                 has_more = res_json["data"].get("has_more", False)
                 logger.info(f"第 {page_count} 页获取到 {len(comments)} 条评论，has_more: {has_more}")
@@ -725,63 +808,297 @@ class XHS_Apis():
             msg = str(e)
         return success, msg, res_json
 
-    def get_note_all_inner_comment(self, comment: dict, xsec_token: str, cookies_str: str, proxies: dict = None):
+    def get_note_all_inner_comment(self, comment: dict, xsec_token: str, cookies_str: str, proxies: dict = None, level: int = 2):
         """
-            获取笔记的全部二级评论
-            :param comment 笔记的一级评论
+            递归获取评论的所有子评论（支持多层级）
+            :param comment 评论对象
             :param cookies_str 你的cookies
-            返回笔记的全部二级评论
+            :param level 当前评论层级（用于日志）
+            返回包含所有子评论的评论对象
         """
         try:
             # 首先检查是否已经有sub_comments字段，如果没有则初始化
             if 'sub_comments' not in comment:
                 comment['sub_comments'] = []
             
-            # 注意：即使sub_comment_has_more为False，comment中可能已经包含了一些二级评论
-            # 需要检查sub_comment_count来确定是否有二级评论
+            # 检查sub_comment_count来确定是否有子评论
             sub_comment_count = comment.get('sub_comment_count', 0)
             # 确保是整数类型
             if isinstance(sub_comment_count, str):
                 sub_comment_count = int(sub_comment_count) if sub_comment_count.isdigit() else 0
             
-            # 如果没有二级评论，直接返回
+            # 如果没有子评论，直接返回
             if sub_comment_count == 0:
-                logger.debug(f"评论 {comment['id']} 没有二级评论")
+                logger.debug(f"评论 {comment['id']} 没有{level}级评论")
                 return True, 'success', comment
-            
-            # 如果has_more为False，说明所有二级评论已经在comment['sub_comments']中了
-            if not comment.get('sub_comment_has_more', False):
-                logger.debug(f"评论 {comment['id']} 的二级评论已全部包含，共 {len(comment['sub_comments'])} 条")
+
+            # 检查当前已有的子评论数量是否等于预期数量
+            current_count = len(comment.get('sub_comments', []))
+
+            # 如果数量已经完整（当前数≥预期数），直接递归处理
+            if current_count >= sub_comment_count:
+                logger.debug(f"评论 {comment['id']} 的{level}级评论已完整（{current_count}/{sub_comment_count}）")
+                # 递归处理已有的子评论
+                for sub_comment in comment['sub_comments']:
+                    self.get_note_all_inner_comment(sub_comment, xsec_token, cookies_str, proxies, level + 1)
                 return True, 'success', comment
-            
-            # 需要获取更多二级评论
+
+            # 否则需要主动获取完整数据（即使sub_comment_has_more=False也要检查）
+            logger.info(f"评论 {comment['id']} 需要获取完整{level}级子评论（当前{current_count}条，预期{sub_comment_count}条）")
+
+            # 先获取完整数据到临时列表，成功后再替换（避免失败时丢失原有数据）
             cursor = comment.get('sub_comment_cursor', '')
             inner_comment_list = []
             page = 0
-            while True:
-                page += 1
-                logger.debug(f"获取评论 {comment['id']} 的第 {page} 页二级评论")
-                success, msg, res_json = self.get_note_inner_comment(comment, cursor, xsec_token, cookies_str, proxies)
-                if not success:
-                    raise Exception(msg)
-                comments = res_json["data"]["comments"]
-                inner_comment_list.extend(comments)
-                
-                if 'cursor' in res_json["data"]:
-                    cursor = str(res_json["data"]["cursor"])
-                else:
+            fetch_success = False  # 标记是否成功获取
+
+            # ========== 智能重试机制（无Cookie池版本，只能等待重试）==========
+            max_retries = 3  # 无Cookie池时重试次数较少
+            for retry_count in range(max_retries):
+                try:
+                    # 分页获取子评论
+                    while True:
+                        page += 1
+                        logger.debug(f"获取评论 {comment['id']} 的第 {page} 页{level}级评论")
+                        success, msg, res_json = self.get_note_inner_comment(comment, cursor, xsec_token, cookies_str, proxies)
+
+                        if not success:
+                            raise Exception(msg)
+
+                        # ========== 识别限流错误（code 300013）==========
+                        if "code" in res_json and res_json["code"] == API_CODE_RATE_LIMITED:
+                            # 访问频次异常
+                            rate_limit_msg = res_json.get('msg', '访问频次异常')
+
+                            if retry_count < max_retries - 1:
+                                # 还有重试机会，等待后重试
+                                logger.warning(f"⚠️  限流（code {API_CODE_RATE_LIMITED}：{rate_limit_msg}），等待 {SUB_COMMENT_RETRY_WAIT} 秒后重试 ({retry_count+1}/{max_retries})")
+                                time.sleep(SUB_COMMENT_RETRY_WAIT)
+                                raise Exception(f"RateLimited_{retry_count}")  # 触发外层重试
+                            else:
+                                # 最后一次重试也失败
+                                logger.error(f"❌ 限流错误，已重试{max_retries}次，放弃获取")
+                                raise Exception(f"访问频次异常，重试{max_retries}次后失败")
+
+                        # 检查数据格式
+                        if "data" not in res_json or "comments" not in res_json["data"]:
+                            raise Exception(f"API返回数据格式错误: {res_json}")
+
+                        # 提取评论
+                        comments = res_json["data"]["comments"]
+                        inner_comment_list.extend(comments)
+                        logger.debug(f"  成功获取 {len(comments)} 条子评论")
+
+                        # 检查分页
+                        if 'cursor' in res_json["data"]:
+                            cursor = str(res_json["data"]["cursor"])
+                        else:
+                            break
+
+                        if not res_json["data"]["has_more"]:
+                            break
+
+                        # 请求间隔（使用配置的3秒）
+                        time.sleep(SUB_COMMENT_REQUEST_INTERVAL)
+
+                    # 成功获取所有分页数据，跳出重试循环
+                    fetch_success = True
                     break
-                    
-                if not res_json["data"]["has_more"]:
-                    break
+
+                except Exception as e:
+                    # 判断是否是限流错误需要重试
+                    if "RateLimited_" in str(e):
+                        # 限流错误，继续下一轮重试（等待后）
+                        continue
+                    elif retry_count < max_retries - 1:
+                        # 其他错误，也尝试重试
+                        logger.warning(f"获取失败: {e}，等待后重试 ({retry_count+1}/{max_retries})")
+                        time.sleep(5)  # 短暂等待
+                        continue
+                    else:
+                        # 最后一次重试也失败
+                        logger.error(f"评论 {comment['id']} 获取子评论失败（重试{max_retries}次后）: {e}，保留原有{current_count}条数据")
+                        break
+
+            # 如果成功获取，替换为完整数据
+            if fetch_success:
+                comment['sub_comments'] = inner_comment_list
+                actual_count = len(comment['sub_comments'])
+                logger.info(f"✅ 评论 {comment['id']} 完整获取{level}级子评论成功：{actual_count}/{sub_comment_count} 条")
+            else:
+                logger.warning(f"⚠️  评论 {comment['id']} 未能获取完整子评论，保留原有{current_count}条数据")
             
-            # 将获取到的额外二级评论添加到列表中
-            comment['sub_comments'].extend(inner_comment_list)
-            logger.debug(f"评论 {comment['id']} 共获取到 {len(comment['sub_comments'])} 条二级评论")
+            # 递归获取每个子评论的子评论（支持多层级）
+            for sub_comment in comment['sub_comments']:
+                # 递归调用，获取更深层级的评论
+                self.get_note_all_inner_comment(sub_comment, xsec_token, cookies_str, proxies, level + 1)
+                
         except Exception as e:
             success = False
             msg = str(e)
         return success, msg, comment
+
+    def get_note_all_inner_comment_with_provider(self, comment: dict, xsec_token: str,
+                                                 cookie_provider, proxies: dict = None,
+                                                 level: int = 2, max_level: int = 10):
+        """
+        递归获取评论的所有子评论（支持Cookie池，支持多层级）
+
+        :param comment: 评论对象
+        :param xsec_token: xsec_token参数
+        :param cookie_provider: Cookie提供函数，返回 (success, cookie_str)
+        :param proxies: 代理设置
+        :param level: 当前评论层级
+        :param max_level: 最大递归层级（防止无限递归）
+        :return: (success, msg, comment)
+        """
+        try:
+            # 检查最大层级限制
+            if level > max_level:
+                logger.warning(f"达到最大层级限制 {max_level}，停止递归")
+                return True, f'reached max level {max_level}', comment
+
+            # 初始化sub_comments
+            if 'sub_comments' not in comment:
+                comment['sub_comments'] = []
+
+            # 检查sub_comment_count
+            sub_comment_count = comment.get('sub_comment_count', 0)
+            if isinstance(sub_comment_count, str):
+                sub_comment_count = int(sub_comment_count) if sub_comment_count.isdigit() else 0
+
+            if sub_comment_count == 0:
+                logger.debug(f"评论 {comment['id']} 没有{level}级评论")
+                return True, 'success', comment
+
+            # 检查当前已有的子评论数量是否等于预期数量
+            current_count = len(comment.get('sub_comments', []))
+
+            # 如果数量已经完整（当前数≥预期数），直接递归处理
+            if current_count >= sub_comment_count:
+                logger.debug(f"评论 {comment['id']} 的{level}级评论已完整（{current_count}/{sub_comment_count}）")
+                # 递归处理已有的子评论
+                for sub_comment in comment['sub_comments']:
+                    self.get_note_all_inner_comment_with_provider(
+                        sub_comment, xsec_token, cookie_provider, proxies, level + 1, max_level
+                    )
+                return True, 'success', comment
+
+            # 否则需要主动获取完整数据（即使sub_comment_has_more=False也要检查）
+            logger.info(f"评论 {comment['id']} 需要获取完整{level}级子评论（当前{current_count}条，预期{sub_comment_count}条）")
+
+            # 先获取完整数据到临时列表，成功后再替换（避免失败时丢失原有数据）
+            cursor = comment.get('sub_comment_cursor', '')
+            inner_comment_list = []
+            page = 0
+            fetch_success = False  # 标记是否成功获取
+
+            # ========== 智能重试机制：先切换Cookie，都失败则等待 ==========
+            for retry_count in range(SUB_COMMENT_MAX_RETRIES):
+                try:
+                    # 使用Cookie提供函数获取Cookie
+                    success, cookies_str = cookie_provider()
+                    if not success:
+                        if retry_count < SUB_COMMENT_MAX_RETRIES - 1:
+                            logger.warning(f"无可用Cookie，等待后重试 ({retry_count+1}/{SUB_COMMENT_MAX_RETRIES})")
+                            time.sleep(SUB_COMMENT_RETRY_WAIT)
+                            continue
+                        else:
+                            raise Exception("无可用Cookie，所有重试均失败")
+
+                    # 分页获取子评论
+                    while True:
+                        page += 1
+                        logger.debug(f"获取评论 {comment['id']} 的第 {page} 页{level}级评论")
+
+                        # 请求子评论
+                        success, msg, res_json = self.get_note_inner_comment(
+                            comment, cursor, xsec_token, cookies_str, proxies
+                        )
+
+                        if not success:
+                            raise Exception(msg)
+
+                        # ========== 识别限流错误（code 300013）==========
+                        if "code" in res_json and res_json["code"] == API_CODE_RATE_LIMITED:
+                            # 访问频次异常
+                            rate_limit_msg = res_json.get('msg', '访问频次异常')
+
+                            if retry_count < SUB_COMMENT_MAX_RETRIES - 1:
+                                # 还有重试机会，切换Cookie
+                                logger.warning(f"⚠️  限流（code {API_CODE_RATE_LIMITED}：{rate_limit_msg}），切换Cookie重试 ({retry_count+1}/{SUB_COMMENT_MAX_RETRIES})")
+                                raise Exception(f"RateLimited_{retry_count}")  # 触发外层重试
+                            else:
+                                # 最后一次重试，等待后再试
+                                logger.warning(f"⚠️  所有Cookie都限流，等待 {SUB_COMMENT_RETRY_WAIT} 秒后最后一次重试...")
+                                time.sleep(SUB_COMMENT_RETRY_WAIT)
+                                # 重新获取Cookie再试一次
+                                success, cookies_str = cookie_provider()
+                                if not success:
+                                    raise Exception("等待后仍无可用Cookie")
+                                continue  # 继续当前while循环，用新Cookie重试
+
+                        # 检查数据格式
+                        if "data" not in res_json or "comments" not in res_json["data"]:
+                            raise Exception(f"API返回数据格式错误: {res_json}")
+
+                        # 提取评论
+                        comments = res_json["data"]["comments"]
+                        inner_comment_list.extend(comments)
+                        logger.debug(f"  成功获取 {len(comments)} 条子评论")
+
+                        # 检查分页
+                        if 'cursor' in res_json["data"]:
+                            cursor = str(res_json["data"]["cursor"])
+                        else:
+                            break
+
+                        if not res_json["data"]["has_more"]:
+                            break
+
+                        # 请求间隔（使用配置的3秒）
+                        time.sleep(SUB_COMMENT_REQUEST_INTERVAL)
+
+                    # 成功获取所有分页数据，跳出重试循环
+                    fetch_success = True
+                    break
+
+                except Exception as e:
+                    # 判断是否是限流错误需要重试
+                    if "RateLimited_" in str(e):
+                        # 限流错误，继续下一轮重试（切换Cookie）
+                        continue
+                    elif retry_count < SUB_COMMENT_MAX_RETRIES - 1:
+                        # 其他错误，也尝试重试
+                        logger.warning(f"获取失败: {e}，切换Cookie重试 ({retry_count+1}/{SUB_COMMENT_MAX_RETRIES})")
+                        time.sleep(2)  # 短暂等待
+                        continue
+                    else:
+                        # 最后一次重试也失败，记录错误
+                        logger.error(f"评论 {comment['id']} 获取子评论失败（重试{SUB_COMMENT_MAX_RETRIES}次后）: {e}，保留原有{current_count}条数据")
+                        break
+
+            # 如果成功获取，替换为完整数据
+            if fetch_success:
+                comment['sub_comments'] = inner_comment_list
+                actual_count = len(comment['sub_comments'])
+                logger.info(f"✅ 评论 {comment['id']} 完整获取{level}级子评论成功：{actual_count}/{sub_comment_count} 条")
+            else:
+                logger.warning(f"⚠️  评论 {comment['id']} 未能获取完整子评论，保留原有{current_count}条数据")
+
+            # 递归处理所有子评论的子评论
+            for sub_comment in comment['sub_comments']:
+                try:
+                    self.get_note_all_inner_comment_with_provider(
+                        sub_comment, xsec_token, cookie_provider, proxies, level + 1, max_level
+                    )
+                except Exception as e:
+                    logger.warning(f"{level+1}级评论 {sub_comment.get('id')} 获取失败: {e}，继续处理其他评论")
+
+            return True, 'success', comment
+
+        except Exception as e:
+            return False, str(e), comment
 
     def get_note_all_comment(self, url: str, cookies_str: str, proxies: dict = None):
         """
@@ -793,45 +1110,51 @@ class XHS_Apis():
         out_comment_list = []
         success = True
         msg = "获取评论成功"
-        
+
         try:
             urlParse = urllib.parse.urlparse(url)
             note_id = urlParse.path.split("/")[-1]
-            kvs = urlParse.query.split('&')
-            kvDist = {kv.split('=')[0]: kv.split('=')[1] for kv in kvs}
-            success, msg, out_comment_list = self.get_note_all_out_comment(note_id, kvDist['xsec_token'], cookies_str, proxies)
+            kvDist = self._parse_url_params(urlParse.query)
+            xsec_token = kvDist.get('xsec_token', '')
+            success, msg, out_comment_list = self.get_note_all_out_comment(note_id, xsec_token, cookies_str, proxies)
             if not success:
                 raise Exception(msg)
             
-            # 统计二级评论数量
-            total_sub_comments = 0
-            total_sub_comment_count = 0  # API声明的二级评论总数
+            # 递归统计所有层级评论的函数
+            def count_all_comments(comment_list, level=1):
+                """递归统计所有层级的评论数量"""
+                count = len(comment_list)
+                level_counts = {level: count}
+                
+                for comment in comment_list:
+                    if 'sub_comments' in comment and comment['sub_comments']:
+                        sub_counts = count_all_comments(comment['sub_comments'], level + 1)
+                        for sub_level, sub_count in sub_counts.items():
+                            if sub_level in level_counts:
+                                level_counts[sub_level] += sub_count
+                            else:
+                                level_counts[sub_level] = sub_count
+                        count += sum(sub_counts.values())
+                
+                return level_counts if level == 1 else {k: v for k, v in level_counts.items()}
             
+            # 处理所有一级评论及其子评论
             for i, comment in enumerate(out_comment_list):
-                # 记录API声明的二级评论数
-                declared_count = comment.get('sub_comment_count', 0)
-                # 确保是整数类型
-                if isinstance(declared_count, str):
-                    declared_count = int(declared_count) if declared_count.isdigit() else 0
-                total_sub_comment_count += declared_count
-                
                 success, msg, new_comment = self.get_note_all_inner_comment(comment, kvDist['xsec_token'], cookies_str, proxies)
-                if not success:
-                    raise Exception(msg)
-                
-                # 统计实际获取到的二级评论数
-                if 'sub_comments' in comment:
-                    actual_count = len(comment['sub_comments'])
-                    total_sub_comments += actual_count
-                    if declared_count != actual_count:
-                        logger.warning(f"评论 {comment['id']} 声明有 {declared_count} 条二级评论，实际获取 {actual_count} 条")
+                if success:
+                    # 重要：将包含子评论的新评论对象赋值回列表
+                    out_comment_list[i] = new_comment
+                else:
+                    logger.warning(f"获取评论 {comment.get('id', 'unknown')} 的子评论失败: {msg}")
+            
+            # 统计所有层级的评论
+            level_counts = count_all_comments(out_comment_list)
+            total_comments = sum(level_counts.values())
             
             logger.info(f"=== 评论统计 ===")
-            logger.info(f"一级评论: {len(out_comment_list)} 条")
-            logger.info(f"二级评论（API声明）: {total_sub_comment_count} 条")
-            logger.info(f"二级评论（实际获取）: {total_sub_comments} 条")
-            logger.info(f"总计（一级+二级实际）: {len(out_comment_list) + total_sub_comments} 条")
-            logger.info(f"小红书显示总数应为: {len(out_comment_list) + total_sub_comment_count} 条")
+            for level, count in sorted(level_counts.items()):
+                logger.info(f"{level}级评论: {count} 条")
+            logger.info(f"所有评论总计: {total_comments} 条")
             
         except Exception as e:
             success = False
