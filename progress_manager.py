@@ -137,16 +137,47 @@ class ProgressManager:
             return match.group(1)
         return None
 
-    def is_note_completed(self, note_id: str) -> bool:
+    def is_note_completed(self, note_id: str, min_completion_rate: float = 0.9) -> bool:
         """
-        判断笔记是否已完成
+        判断笔记是否已完成（增强版：检查评论完成度）
 
         优先检查进度文件，如果没有则检查文件存在性
+
+        :param note_id: 笔记ID
+        :param min_completion_rate: 最小评论完成度（0-1），默认0.9（90%）
+        :return: True表示已完成，False表示未完成或需要继续
         """
         # 1. 检查进度文件
         if note_id in self.progress_data['notes_progress']:
             note_progress = self.progress_data['notes_progress'][note_id]
-            return note_progress.get('status') == 'completed'
+
+            # 首先检查基本状态
+            if note_progress.get('status') != 'completed':
+                return False
+
+            # 检查评论完成度（如果启用了评论获取）
+            comments = note_progress.get('comments', {})
+            if comments.get('enabled', False):
+                total_expected = comments.get('total_expected', 0)
+                total_fetched = comments.get('total_fetched', 0)
+
+                # 如果有预期数量，检查完成度
+                if total_expected > 0:
+                    completion_rate = total_fetched / total_expected
+                    if completion_rate < min_completion_rate:
+                        logger.info(f"📊 笔记 {note_id} 评论完成度不足: {completion_rate*100:.1f}% "
+                                  f"({total_fetched:,}/{total_expected:,})，需要继续获取")
+                        return False
+                    else:
+                        logger.debug(f"✅ 笔记 {note_id} 评论完成度: {completion_rate*100:.1f}%")
+
+                # 如果没有预期数量但有completed标记，检查该标记
+                elif not comments.get('completed', False):
+                    logger.info(f"📋 笔记 {note_id} 评论标记为未完成，需要继续获取")
+                    return False
+
+            # 状态为completed且评论完成度达标
+            return True
 
         # 2. 检查文件存在性（向后兼容）
         full_file = os.path.join(self.output_dir, f"note_{note_id}_full.json")
@@ -395,11 +426,12 @@ class ProgressManager:
         """获取笔记的进度信息"""
         return self.progress_data['notes_progress'].get(note_id, {})
 
-    def get_pending_notes(self, all_note_urls: list) -> list:
+    def get_pending_notes(self, all_note_urls: list, min_completion_rate: float = 0.9) -> list:
         """
         获取待处理的笔记列表
 
         :param all_note_urls: 所有笔记URL列表
+        :param min_completion_rate: 最小评论完成度（0-1），默认0.9（90%）
         :return: 待处理的笔记URL列表
         """
         # 更新总数
@@ -416,8 +448,8 @@ class ProgressManager:
                 pending_notes.append(note_url)
                 continue
 
-            # 检查是否已完成
-            if self.is_note_completed(note_id):
+            # 检查是否已完成（包含评论完成度检查）
+            if self.is_note_completed(note_id, min_completion_rate):
                 completed_count += 1
                 continue
 

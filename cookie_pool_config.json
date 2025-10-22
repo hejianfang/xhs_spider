@@ -2,15 +2,15 @@
   "strategy": "round_robin",
   "accounts": [
     {
-      "cookie_str": "abRequestId=6b3e269f-e1d8-5d8c-87a9-7a6e282a4299; a1=19a003f81afm4aapj2heo6xnaps3finy19gze7wvq30000410200; webId=ae8ce28b81a198cb98989a1eb971bd4b; gid=yj088484SSy8yj088qiYyjWE0i6400UVJxdlkhAKCI0UMuq8qi3Ivd8884y8J888YWS2KyKW; webBuild=4.83.0; web_session=040069b0daa63312c7894719c23a4b445169b2; xsecappid=xhs-pc-web; loadts=1761100774690; websectiga=a9bdcaed0af874f3a1431e94fbea410e8f738542fbb02df1e8e30c29ef3d91ac; sec_poison_id=1cc45da6-4298-4be2-ae43-b17f010f1b01; acw_tc=0ad5294117611007777456944e41b08186560b5458fde332b00b83390507a4; unread={%22ub%22:%2268f6fdbd0000000004003439%22%2C%22ue%22:%2268f44a860000000007021ff7%22%2C%22uc%22:17}",
+      "cookie_str": "abRequestId=82056c0d-cf5c-5c15-8929-aac8b9010e65; webBuild=4.83.0; xsecappid=xhs-pc-web; loadts=1761121119957; a1=19a0affaed5tcv87s1fdfqwk2xk0cf65vlg4750ut30000163707; webId=b1c5846590aba3cc19effc61a2f9585b; acw_tc=0a50862317611211203066647e8ecb996d99e4f224b641901869b387a47a10; websectiga=f47eda31ec99545da40c2f731f0630efd2b0959e1dd10d5fedac3dce0bd1e04d; sec_poison_id=fd6e4f6b-f975-4b79-a4eb-344e57c138f2; gid=yj080iiDDYhKyj080ii0d128f29ShYWMyifik79AETJCT4q88SiK2W888yKqW8W8W8242qyj; web_session=040069b7fa0b116423e5cbdbcd3a4b41488b75; unread={%22ub%22:%2268e78d27000000000703478e%22%2C%22ue%22:%2268da8470000000000b010643%22%2C%22uc%22:21}",
       "name": "1",
       "remark": "",
       "is_active": true,
-      "use_count": 0,
-      "success_count": 0,
-      "fail_count": 0,
-      "error_count": 0,
-      "total_notes": 0,
+      "use_count": 52,
+      "success_count": 50,
+      "fail_count": 2,
+      "error_count": 1,
+      "total_notes": 50,
       "daily_limit": 100,
       "min_interval": 3
     }

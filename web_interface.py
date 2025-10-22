@@ -234,6 +234,10 @@ def parse_json():
         include_comments = data.get('include_comments', True)
         download_media = data.get('download_media', True)
         output_name = data.get('output_name', '')
+        # 新增参数
+        min_completion_rate = data.get('min_completion_rate', 0.9)
+        force_retry = data.get('force_retry', False)
+        resume_incomplete = data.get('resume_incomplete', False)
 
         logger.info(f"开始解析任务: 文件数={len(files_to_parse)}, 格式={save_format}, 评论={include_comments}, 媒体={download_media}")
 
@@ -299,7 +303,10 @@ def parse_json():
                         output_dir=output_dir,
                         include_comments=include_comments,
                         download_media=download_media,
-                        save_format=save_format
+                        save_format=save_format,
+                        min_completion_rate=min_completion_rate,
+                        force_retry=force_retry,
+                        resume_incomplete=resume_incomplete
                     )
 
                     if success:
@@ -880,6 +887,10 @@ def parse_single_note():
         include_comments = data.get('include_comments', True)
         download_media = data.get('download_media', True)
         save_format = data.get('save_format', 'all')
+        # 新增参数
+        min_completion_rate = data.get('min_completion_rate', 0.9)
+        force_retry = data.get('force_retry', False)
+        resume_incomplete = data.get('resume_incomplete', False)
 
         logger.info(f"开始解析单个笔记: note_id={note_id}, source_file={source_file}")
 
@@ -964,7 +975,10 @@ def parse_single_note():
             output_dir=output_dir,
             include_comments=include_comments,
             download_media=download_media,
-            save_format=save_format
+            save_format=save_format,
+            min_completion_rate=min_completion_rate,
+            force_retry=force_retry,
+            resume_incomplete=resume_incomplete
         )
 
         if success:

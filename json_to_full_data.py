@@ -138,7 +138,7 @@ class JsonToFullData:
         logger.info(f"Cookie池共有 {total_accounts} 个账号可供重试")
 
         wait_rounds = 0  # 等待轮数计数器
-        max_wait_rounds = 3  # 最大等待轮数
+        max_wait_rounds = 10  # 最大等待轮数（增加到10轮）
 
         while len(tried_cookie_ids) < total_accounts:
             # 获取可用账号
@@ -153,7 +153,8 @@ class JsonToFullData:
                 # 如果还有未尝试的账号，但暂时都不可用（可能在冷却中）
                 if wait_rounds < max_wait_rounds:
                     wait_rounds += 1
-                    wait_time = 2  # 等待2秒让账号冷却
+                    # 等待时间递增：5秒起步，每轮+1秒，最多10秒
+                    wait_time = min(5 + wait_rounds - 1, 10)
                     logger.warning(f"所有账号暂时不可用，等待 {wait_time} 秒后重试 (第 {wait_rounds}/{max_wait_rounds} 轮)")
                     time.sleep(wait_time)
                     continue
@@ -511,7 +512,8 @@ class JsonToFullData:
         # 不应该无条件标记为完成，因为可能是因为错误提前退出
         logger.info(f"📊 评论获取结束，共 {total_comments:,} 条评论（包含所有层级）保存到: {output_file}")
 
-        # 计算完成度
+        # 计算完成度并决定是否标记为完成
+        is_completed = True  # 默认完成
         if expected_comment_count > 0:
             completion_pct = (total_comments / expected_comment_count) * 100
             if completion_pct < 50:
@@ -520,10 +522,27 @@ class JsonToFullData:
                 logger.warning(f"  1. xsec_token已过期（最常见） - 需要重新获取URL")
                 logger.warning(f"  2. Cookie权限不足或限流 - 尝试使用Cookie池")
                 logger.warning(f"  3. API返回has_more=false但实际还有更多数据 - 可能是小红书的限制")
+                is_completed = False  # 完成度过低，标记为未完成
             elif completion_pct < 90:
                 logger.info(f"📈 完成度: {completion_pct:.1f}% ({total_comments:,}/{expected_comment_count:,})")
+                logger.info(f"💡 评论未完全获取，下次运行时将继续从断点处获取")
+                is_completed = False  # 未达到90%阈值，标记为未完成
             else:
                 logger.success(f"✅ 完成度: {completion_pct:.1f}% ({total_comments:,}/{expected_comment_count:,})")
+                is_completed = True
+
+        # 更新进度管理器的完成状态
+        if self.progress_manager:
+            self.progress_manager.update_comments_progress(
+                note_id=note_id,
+                total_fetched=total_comments,
+                last_cursor=cursor,
+                completed=is_completed
+            )
+            if is_completed:
+                logger.debug(f"✅ 评论已标记为完成")
+            else:
+                logger.info(f"📝 评论标记为未完成，支持断点续传")
 
         return total_comments
 
@@ -656,7 +675,9 @@ class JsonToFullData:
     def process_json_to_full_data(self, json_file_path: str = None, cookies_str: str = None,
                                  output_dir: str = None, include_comments: bool = True,
                                  download_media: bool = True, save_format: str = 'json',
-                                 proxies: dict = None, note_data_list: list = None):
+                                 proxies: dict = None, note_data_list: list = None,
+                                 min_completion_rate: float = 0.9, force_retry: bool = False,
+                                 resume_incomplete: bool = False):
         """
         处理JSON文件或笔记数据列表，获取所有笔记的完整信息并保存
 
@@ -668,6 +689,9 @@ class JsonToFullData:
         :param save_format: 保存格式 'json', 'excel', 'all'
         :param proxies: 代理设置
         :param note_data_list: 直接传入笔记数据列表（与json_file_path二选一）✨新增
+        :param min_completion_rate: 最小评论完成度（0-1），默认0.9（90%）
+        :param force_retry: 是否强制重新处理所有笔记（忽略进度）
+        :param resume_incomplete: 是否只重试未完成的笔记
         :return: 成功状态, 消息, 处理结果统计
         """
         try:
@@ -714,8 +738,22 @@ class JsonToFullData:
             # ========== 初始化进度管理器（支持断点续爬）==========
             self.progress_manager = ProgressManager(output_dir, json_source)
 
-            # 获取待处理笔记列表（自动跳过已完成）
-            pending_note_urls = self.progress_manager.get_pending_notes(note_urls)
+            # 处理强制重试模式
+            if force_retry:
+                logger.warning("🔄 强制重试模式：将重新处理所有笔记（忽略进度）")
+                pending_note_urls = note_urls
+                # 清空进度统计（但保留进度文件以便查看历史）
+                self.progress_manager.progress_data['statistics'] = {
+                    'completed': 0, 'failed': 0, 'skipped': 0,
+                    'processing': 0, 'pending': len(note_urls)
+                }
+            elif resume_incomplete:
+                logger.info("📝 仅重试未完成的笔记模式")
+                # 获取所有未完成的笔记（完成度不足的也会被识别）
+                pending_note_urls = self.progress_manager.get_pending_notes(note_urls, min_completion_rate)
+            else:
+                # 正常模式：获取待处理笔记列表（自动跳过已完成）
+                pending_note_urls = self.progress_manager.get_pending_notes(note_urls, min_completion_rate)
 
             if len(pending_note_urls) == 0:
                 logger.success("🎉 所有笔记已处理完成！")
@@ -798,20 +836,34 @@ class JsonToFullData:
                             except Exception as e:
                                 logger.warning(f'媒体文件下载失败: {str(e)}')
 
-                        # ========== 标记笔记完成 ==========
+                        # ========== 标记笔记完成（检查评论完成度）==========
                         if note_id:
+                            # 从进度中读取评论实际完成状态
+                            note_progress = self.progress_manager.get_note_progress(note_id)
+                            comments_progress = note_progress.get('comments', {})
+                            comments_completed = comments_progress.get('completed', True)
+
+                            # 只有评论真正完成才标记笔记为完成
                             details = {
                                 'comments': {
                                     'enabled': include_comments,
                                     'total_fetched': comment_count,
-                                    'completed': True
+                                    'completed': comments_completed  # 使用实际完成状态
                                 },
                                 'media': {
                                     'enabled': download_media,
                                     'completed': True
                                 }
                             }
-                            self.progress_manager.mark_note_completed(note_id, details)
+
+                            # 只有在评论完成（或未启用评论）时才标记笔记为完成
+                            if comments_completed or not include_comments:
+                                self.progress_manager.mark_note_completed(note_id, details)
+                                logger.info(f"✅ 笔记已标记为完成: {note_id}")
+                            else:
+                                # 评论未完成，保持为processing状态，方便下次继续
+                                logger.warning(f"⚠️ 评论未完全获取，笔记保持为待处理状态: {note_id}")
+                                logger.info(f"💡 下次运行时将从断点继续获取剩余评论")
 
                         # 注意：单个笔记的JSON文件已经在get_note_full_info中保存，无需重复保存
                     else:
