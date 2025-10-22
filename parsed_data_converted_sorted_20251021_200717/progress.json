@@ -1,0 +1,97 @@
+{
+  "task_id": "task_20251021_200717",
+  "json_source": "direct_data_1_notes",
+  "output_dir": "parsed_data_converted_sorted_20251021_200717",
+  "start_time": "2025-10-21 20:07:17",
+  "last_update": "2025-10-22 10:41:46",
+  "total_notes": 1,
+  "notes_progress": {
+    "68d9f63b000000001201deab": {
+      "status": "completed",
+      "note_url": "https://www.xiaohongshu.com/explore/68d9f63b000000001201deab?app_platform=ios&app_version=9.4&share_from_user_hidden=true&xsec_source=app_share&type=normal&xsec_token=CBrGTCtHs74eKIsj5-x2OyzW9Oh6DE_WMyOWtsC6xpDcM=&author_share=1&xhsshare=WeixinSession&shareRedId=N0o7ODs4STs2NzUyOTgwNjY0OTc5ODhL&apptime=1760745609&share_id=6d98ac057d7d433ca19a2fbb908237c0",
+      "basic_info_saved": false,
+      "comments": {
+        "enabled": true,
+        "total_expected": 20000,
+        "total_fetched": 13210,
+        "last_cursor": "68daa697000000003802f6d7",
+        "completed": true,
+        "current_page": 100,
+        "crawl_speed": 2.47,
+        "errors": [
+          {
+            "message": "第 100 页获取失败（所有Cookie已尝试）: 所有Cookie账号(1个)均失败",
+            "time": "2025-10-21 22:47:09"
+          }
+        ],
+        "warnings": [
+          {
+            "message": "子评论数量不足：预期3条，实际2条 (66.7%)",
+            "time": "2025-10-21 22:45:54"
+          },
+          {
+            "message": "子评论数量不足：预期4条，实际3条 (75.0%)",
+            "time": "2025-10-21 22:46:02"
+          },
+          {
+            "message": "子评论数量不足：预期2条，实际1条 (50.0%)",
+            "time": "2025-10-21 22:46:06"
+          },
+          {
+            "message": "子评论数量不足：预期3条，实际2条 (66.7%)",
+            "time": "2025-10-21 22:46:13"
+          },
+          {
+            "message": "子评论数量不足：预期7条，实际6条 (85.7%)",
+            "time": "2025-10-21 22:46:34"
+          },
+          {
+            "message": "子评论数量不足：预期2条，实际1条 (50.0%)",
+            "time": "2025-10-21 22:46:36"
+          },
+          {
+            "message": "子评论数量不足：预期4条，实际3条 (75.0%)",
+            "time": "2025-10-21 22:46:47"
+          },
+          {
+            "message": "子评论数量不足：预期6条，实际5条 (83.3%)",
+            "time": "2025-10-21 22:46:48"
+          },
+          {
+            "message": "子评论数量不足：预期5条，实际4条 (80.0%)",
+            "time": "2025-10-21 22:46:49"
+          },
+          {
+            "message": "子评论数量不足：预期6条，实际5条 (83.3%)",
+            "time": "2025-10-21 22:47:02"
+          }
+        ],
+        "last_update_time": "2025-10-21 22:47:02"
+      },
+      "media": {
+        "enabled": true,
+        "images": {
+          "total": 0,
+          "downloaded": 0,
+          "urls": []
+        },
+        "videos": {
+          "total": 0,
+          "downloaded": 0,
+          "urls": []
+        },
+        "completed": true
+      },
+      "start_time": "2025-10-21 20:07:17",
+      "end_time": "2025-10-21 22:47:09",
+      "error_message": null
+    }
+  },
+  "statistics": {
+    "completed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "processing": 0,
+    "pending": 0
+  }
+}

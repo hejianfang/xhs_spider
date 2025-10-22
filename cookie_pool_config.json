@@ -1,4 +1,18 @@
 {
   "strategy": "round_robin",
-  "accounts": []
+  "accounts": [
+    {
+      "cookie_str": "abRequestId=6b3e269f-e1d8-5d8c-87a9-7a6e282a4299; a1=19a003f81afm4aapj2heo6xnaps3finy19gze7wvq30000410200; webId=ae8ce28b81a198cb98989a1eb971bd4b; gid=yj088484SSy8yj088qiYyjWE0i6400UVJxdlkhAKCI0UMuq8qi3Ivd8884y8J888YWS2KyKW; webBuild=4.83.0; web_session=040069b0daa63312c7894719c23a4b445169b2; xsecappid=xhs-pc-web; loadts=1761100774690; websectiga=a9bdcaed0af874f3a1431e94fbea410e8f738542fbb02df1e8e30c29ef3d91ac; sec_poison_id=1cc45da6-4298-4be2-ae43-b17f010f1b01; acw_tc=0ad5294117611007777456944e41b08186560b5458fde332b00b83390507a4; unread={%22ub%22:%2268f6fdbd0000000004003439%22%2C%22ue%22:%2268f44a860000000007021ff7%22%2C%22uc%22:17}",
+      "name": "1",
+      "remark": "",
+      "is_active": true,
+      "use_count": 0,
+      "success_count": 0,
+      "fail_count": 0,
+      "error_count": 0,
+      "total_notes": 0,
+      "daily_limit": 100,
+      "min_interval": 3
+    }
+  ]
 }

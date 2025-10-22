@@ -372,6 +372,308 @@
             margin: 0 auto 20px;
             opacity: 0.3;
         }
+
+        /* 进度卡片样式 */
+        .progress-card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .progress-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .progress-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 5px;
+        }
+
+        .progress-meta {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .progress-stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .stat-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 15px;
+            background: white;
+            border-radius: 8px;
+            min-width: 80px;
+        }
+
+        .stat-box-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-box-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .progress-bar-fill.completed {
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+        }
+
+        .progress-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn-resume {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-resume:hover {
+            background: #d97706;
+        }
+
+        .btn-view-detail {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-view-detail:hover {
+            background: #2563eb;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.processing {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-badge.completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-badge.failed {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* 笔记详情列表样式 */
+        .note-item {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+
+        .note-item:hover {
+            background: #f3f4f6;
+        }
+
+        .note-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .note-id {
+            font-family: monospace;
+            font-size: 13px;
+            color: #6b7280;
+            background: #f3f4f6;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .note-stats-row {
+            display: flex;
+            gap: 15px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .note-stat-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+        }
+
+        .note-stat-label {
+            color: #6b7280;
+        }
+
+        .note-stat-value {
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .comment-progress-mini {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .progress-bar-mini {
+            flex: 1;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill-mini {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+
+        .progress-fill-mini.completed {
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+        }
+
+        .progress-fill-mini.failed {
+            background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .progress-text-mini {
+            font-size: 12px;
+            color: #6b7280;
+            min-width: 80px;
+            text-align: right;
+        }
+
+        /* 视图切换按钮 */
+        .btn-view-toggle {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            color: #6b7280;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-view-toggle:hover {
+            background: #e5e7eb;
+            color: #1f2937;
+        }
+
+        .btn-view-toggle.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* 笔记表格行样式 */
+        .note-row {
+            background: white;
+        }
+
+        .note-row:hover {
+            background: #f9fafb;
+        }
+
+        .sub-note-row {
+            background: #fafbfc;
+        }
+
+        .sub-note-row:hover {
+            background: #f3f4f6;
+        }
+
+        .indent-1 {
+            padding-left: 40px !important;
+        }
+
+        .expand-icon {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .expand-icon.expanded {
+            transform: rotate(90deg);
+        }
+
+        .progress-bar-inline {
+            display: inline-flex;
+            width: 100px;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            vertical-align: middle;
+        }
+
+        .progress-fill-inline {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+
+        .progress-fill-inline.completed {
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+        }
+
+        .progress-fill-inline.failed {
+            background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+        }
     </style>
 </head>
 <body>
@@ -397,6 +699,10 @@
                     <span class="stat-value" id="total-notes">0</span>
                 </div>
                 <div class="stat-item">
+                    <span class="stat-label">预期评论总数:</span>
+                    <span class="stat-value" id="total-comments">0</span>
+                </div>
+                <div class="stat-item">
                     <span class="stat-label">已选择:</span>
                     <span class="stat-value" id="selected-count">0</span>
                 </div>
@@ -405,9 +711,9 @@
 
         <!-- 操作栏 -->
         <div class="actions-bar">
-            <div style="display: flex; gap: 10px;">
-                <button class="btn btn-secondary" onclick="refreshFiles()">
-                    🔄 刷新列表
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button class="btn btn-secondary" onclick="refreshNotes()">
+                    🔄 刷新
                 </button>
                 <button class="btn btn-primary" onclick="parseSelected()">
                     📊 解析选中
@@ -423,13 +729,16 @@
                 <button class="btn btn-secondary" onclick="unselectAll()">
                     ❌ 取消全选
                 </button>
+                <button class="btn btn-secondary" onclick="refreshProgress()">
+                    📈 刷新进度
+                </button>
             </div>
         </div>
 
         <!-- 表格容器 -->
         <div class="table-container">
             <div class="table-header">
-                <h3 style="color: #1f2937; font-size: 18px;">JSON文件列表</h3>
+                <h3 style="color: #1f2937; font-size: 18px;">📝 笔记列表</h3>
                 <div class="search-box">
                     <input type="text" id="search-input" placeholder="搜索文件名或关键词..." onkeyup="filterTable()">
                 </div>
@@ -442,18 +751,8 @@
             
             <div id="table-content">
                 <table>
-                    <thead>
-                        <tr>
-                            <th class="checkbox-cell">
-                                <input type="checkbox" id="select-all-checkbox" onchange="toggleSelectAll()">
-                            </th>
-                            <th>文件名</th>
-                            <th>关键词</th>
-                            <th>笔记数量</th>
-                            <th>文件大小</th>
-                            <th>创建时间</th>
-                            <th>操作</th>
-                        </tr>
+                    <thead id="table-header">
+                        <!-- 动态生成表头 -->
                     </thead>
                     <tbody id="file-list">
                         <!-- 动态生成内容 -->
@@ -492,7 +791,7 @@
                         <option value="media">仅媒体文件</option>
                     </select>
                 </div>
-                
+
                 <div class="form-group">
                     <label>附加选项</label>
                     <div class="form-check">
@@ -504,7 +803,7 @@
                         <label for="download-media">下载媒体文件</label>
                     </div>
                 </div>
-                
+
                 <div class="form-group">
                     <label>输出目录名称（可选）</label>
                     <input type="text" id="output-name" placeholder="留空使用默认名称">
@@ -517,93 +816,310 @@
         </div>
     </div>
 
+    <!-- 笔记详细进度模态框 -->
+    <div id="note-detail-modal" class="modal">
+        <div class="modal-content" style="max-width: 1000px;">
+            <div class="modal-header">
+                <h2>📝 笔记详细进度</h2>
+            </div>
+            <div class="modal-body" id="note-detail-content" style="max-height: 70vh; overflow-y: auto;">
+                <!-- 动态生成笔记详情列表 -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeNoteDetailModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        let selectedFiles = new Set();
-        let allFiles = [];
+        let selectedNotes = new Set();  // 选中的笔记ID集合
+        let allNotes = [];  // 所有笔记数据
         let currentParseType = '';
-        
+
         // 页面加载时初始化
+        // 自动刷新间隔（毫秒）
+        let autoRefreshInterval = null;
+        const REFRESH_INTERVAL = 2000; // 2秒
+
         document.addEventListener('DOMContentLoaded', function() {
-            refreshFiles();
+            // 初始加载
+            refreshNotes();
+
+            // 启动自动轮询（静默刷新，实时更新进度）
+            startAutoRefresh();
         });
+
+        // 启动自动刷新
+        function startAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+
+            autoRefreshInterval = setInterval(() => {
+                // 静默刷新，不显示loading
+                refreshNotes(true);
+            }, REFRESH_INTERVAL);
+        }
+
+        // 停止自动刷新
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+        }
         
-        // 刷新文件列表
-        async function refreshFiles() {
-            showLoading(true);
+        // 刷新笔记列表（增强版：添加超时控制）
+        async function refreshNotes(silent = false) {
+            // silent模式：静默刷新，不显示loading和错误提示（用于轮询）
+            if (!silent) {
+                showLoading(true);
+            }
+
+            // 创建超时控制（30秒超时）
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
+
             try {
-                const response = await fetch('/api/list-json-files');
+                const response = await fetch('/api/list-all-notes', {
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+
                 const data = await response.json();
-                
+
                 if (data.success) {
-                    allFiles = data.files;
-                    renderTable(allFiles);
-                    updateStats();
+                    allNotes = data.notes;
+                    renderNotesView();
+                    updateStatsFromNotes();
                 } else {
-                    showToast('获取文件列表失败: ' + data.message, 'error');
+                    if (!silent) {
+                        showToast('获取笔记列表失败: ' + data.message, 'error');
+                    }
+                    console.error('API错误:', data.message);
                 }
             } catch (error) {
-                showToast('网络错误: ' + error.message, 'error');
+                clearTimeout(timeoutId);
+
+                // 区分超时和其他错误
+                if (error.name === 'AbortError') {
+                    if (!silent) {
+                        showToast('请求超时，请检查网络连接', 'error');
+                    }
+                    console.error('请求超时');
+                } else {
+                    if (!silent) {
+                        showToast('网络错误: ' + error.message, 'error');
+                    }
+                    console.error('网络错误:', error);
+                }
             } finally {
-                showLoading(false);
+                // 确保loading状态被关闭
+                if (!silent) {
+                    showLoading(false);
+                }
             }
         }
-        
-        // 渲染表格
-        function renderTable(files) {
+
+        // 渲染笔记视图（扁平列表）
+        function renderNotesView() {
             const tbody = document.getElementById('file-list');
+            const thead = document.getElementById('table-header');
             const emptyState = document.getElementById('empty-state');
-            
-            if (files.length === 0) {
+
+            // 更新表头
+            thead.innerHTML = `
+                <tr>
+                    <th class="checkbox-cell">
+                        <input type="checkbox" id="select-all-notes-checkbox" onchange="toggleSelectAllNotes()">
+                    </th>
+                    <th>笔记标题</th>
+                    <th style="width: 100px;">预期评论</th>
+                    <th style="width: 100px;">已获取</th>
+                    <th style="width: 180px;">爬取进度</th>
+                    <th style="width: 100px;">状态</th>
+                    <th style="width: 120px;">操作</th>
+                </tr>
+            `;
+
+            if (allNotes.length === 0) {
                 tbody.innerHTML = '';
                 emptyState.style.display = 'block';
+                emptyState.querySelector('h3').textContent = '暂无笔记数据';
+                emptyState.querySelector('p').textContent = 'search_results 目录下没有找到笔记';
                 return;
             }
-            
+
             emptyState.style.display = 'none';
-            tbody.innerHTML = files.map(file => `
-                <tr>
+
+            // 直接渲染所有笔记（扁平列表）
+            let html = '';
+            allNotes.forEach(note => {
+                html += renderNoteRow(note);
+            });
+
+            tbody.innerHTML = html;
+
+            // 更新复选框和统计
+            updateSelectAllNotesCheckbox();
+            updateSelectedCount();
+        }
+
+        // 渲染单个笔记行
+        function renderNoteRow(note) {
+            const statusBadge = getStatusBadgeHtml(note.status);
+            const progressBarClass = note.status === 'completed' ? 'completed' :
+                                    note.status === 'failed' ? 'failed' : '';
+
+            const isSelected = selectedNotes.has(note.note_id);
+
+            return `
+                <tr class="note-row">
                     <td class="checkbox-cell">
-                        <input type="checkbox" 
-                               value="${file.filename}" 
-                               onchange="toggleFileSelection('${file.filename}')"
-                               ${selectedFiles.has(file.filename) ? 'checked' : ''}>
+                        <input type="checkbox"
+                               value="${note.note_id}"
+                               ${isSelected ? 'checked' : ''}
+                               onchange="toggleNoteSelection('${note.note_id}')">
                     </td>
-                    <td class="file-name">${file.filename}</td>
-                    <td><span class="keyword-tag">${file.keyword || '未知'}</span></td>
-                    <td class="note-count">${file.note_count || 0}</td>
-                    <td>${formatFileSize(file.size)}</td>
-                    <td>${formatDate(file.created_time)}</td>
+                    <td>
+                        <a href="${note.note_url}" target="_blank"
+                           style="color: #667eea; text-decoration: none;"
+                           title="${note.title}">
+                            ${truncateText(note.title, 50)}
+                        </a>
+                        <div style="font-size: 12px; color: #9ca3af; margin-top: 2px;">
+                            来源: ${note.source_file}
+                        </div>
+                    </td>
+                    <td>${formatNumber(note.expected_comments)}</td>
+                    <td style="color: ${note.fetched_comments > 0 ? '#10b981' : '#6b7280'};">
+                        ${formatNumber(note.fetched_comments)}
+                    </td>
+                    <td>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div class="progress-bar-inline">
+                                    <div class="progress-fill-inline ${progressBarClass}"
+                                         style="width: ${note.completion_rate}%"></div>
+                                </div>
+                                <span style="font-size: 12px; color: #6b7280; min-width: 45px;">
+                                    ${note.completion_rate}%
+                                </span>
+                            </div>
+                            ${renderRealTimeProgress(note)}
+                        </div>
+                    </td>
+                    <td>${statusBadge}</td>
                     <td class="action-buttons">
-                        <button class="btn btn-primary btn-small" onclick="parseSingle('${file.filename}')">
-                            解析
-                        </button>
-                        <button class="btn btn-secondary btn-small" onclick="viewFile('${file.filename}')">
-                            查看
-                        </button>
+                        ${renderNoteActionButtons(note)}
                     </td>
                 </tr>
-            `).join('');
+            `;
         }
-        
-        // 更新统计信息
-        function updateStats() {
-            document.getElementById('total-files').textContent = allFiles.length;
-            
-            const totalNotes = allFiles.reduce((sum, file) => sum + (file.note_count || 0), 0);
-            document.getElementById('total-notes').textContent = totalNotes;
-            
-            document.getElementById('selected-count').textContent = selectedFiles.size;
-        }
-        
-        // 切换文件选择
-        function toggleFileSelection(filename) {
-            if (selectedFiles.has(filename)) {
-                selectedFiles.delete(filename);
-            } else {
-                selectedFiles.add(filename);
+
+        // 渲染实时进度信息
+        function renderRealTimeProgress(note) {
+            // 只在处理中时显示实时进度
+            if (note.status !== 'processing') {
+                return '';
             }
-            updateStats();
-            updateSelectAllCheckbox();
+
+            const realtime = note.realtime_progress || {};
+            const parts = [];
+
+            // 当前页数
+            if (realtime.current_page > 0) {
+                parts.push(`<span style="color: #3b82f6;">📄 第${realtime.current_page}页</span>`);
+            }
+
+            // 爬取速度
+            if (realtime.crawl_speed > 0) {
+                parts.push(`<span style="color: #10b981;">⚡ ${realtime.crawl_speed}条/秒</span>`);
+            }
+
+            // 最新错误
+            if (realtime.latest_error) {
+                parts.push(`<span style="color: #ef4444;" title="${realtime.latest_error}">❌ 错误</span>`);
+            }
+
+            // 最新警告
+            if (realtime.latest_warning) {
+                parts.push(`<span style="color: #f59e0b;" title="${realtime.latest_warning}">⚠️ 警告</span>`);
+            }
+
+            if (parts.length === 0) {
+                return '';
+            }
+
+            return `
+                <div style="font-size: 11px; color: #6b7280; display: flex; gap: 8px; flex-wrap: wrap;">
+                    ${parts.join('')}
+                </div>
+            `;
+        }
+
+        // 渲染笔记操作按钮
+        function renderNoteActionButtons(note) {
+            if (note.status === 'completed') {
+                return `
+                    <button class="btn btn-secondary btn-small" onclick="viewNoteDetail('${note.note_id}', '${note.output_dir}')">
+                        查看
+                    </button>
+                `;
+            } else if (note.status === 'processing' || (note.status === 'pending' && note.has_cursor)) {
+                return `
+                    <button class="btn btn-resume btn-small" onclick="parseSingleNoteAction('${note.note_id}', '${note.source_file}')">
+                        继续
+                    </button>
+                `;
+            } else if (note.status === 'failed') {
+                return `
+                    <button class="btn btn-primary btn-small" onclick="parseSingleNoteAction('${note.note_id}', '${note.source_file}')">
+                        重试
+                    </button>
+                `;
+            } else {
+                return `
+                    <button class="btn btn-primary btn-small" onclick="parseSingleNoteAction('${note.note_id}', '${note.source_file}')">
+                        解析
+                    </button>
+                `;
+            }
+        }
+
+        // 获取状态徽章HTML
+        function getStatusBadgeHtml(status) {
+            const badges = {
+                'completed': '<span class="status-badge completed">✓ 已完成</span>',
+                'processing': '<span class="status-badge processing">⏳ 处理中</span>',
+                'failed': '<span class="status-badge failed">✗ 失败</span>',
+                'pending': '<span class="status-badge" style="background: #f3f4f6; color: #6b7280;">⏸️ 待处理</span>'
+            };
+            return badges[status] || badges['pending'];
+        }
+
+        // 截断文本
+        function truncateText(text, maxLength) {
+            if (!text) return '';
+            if (text.length <= maxLength) return text;
+            return text.substring(0, maxLength) + '...';
+        }
+
+        // 从笔记数据更新统计
+        function updateStatsFromNotes() {
+            const totalNotes = allNotes.length;
+            const totalComments = allNotes.reduce((sum, note) => sum + note.expected_comments, 0);
+
+            document.getElementById('total-files').textContent = new Set(allNotes.map(n => n.source_file)).size;
+            document.getElementById('total-notes').textContent = totalNotes;
+            document.getElementById('total-comments').textContent = formatNumber(totalComments);
+        }
+
+        // 格式化数字（添加千分位逗号）
+        function formatNumber(num) {
+            if (!num) return '0';
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         }
         
         // 全选/取消全选
@@ -755,6 +1271,13 @@
             const loading = document.getElementById('loading');
             if (show) {
                 loading.classList.add('active');
+                // 设置5秒超时自动关闭（防止卡住）
+                setTimeout(() => {
+                    if (loading.classList.contains('active')) {
+                        loading.classList.remove('active');
+                        console.warn('Loading状态超时，已自动关闭');
+                    }
+                }, 5000);
             } else {
                 loading.classList.remove('active');
             }
@@ -783,6 +1306,451 @@
             if (!timestamp) return '未知';
             const date = new Date(timestamp * 1000);
             return date.toLocaleString('zh-CN');
+        }
+
+        // ==================== 断点续爬进度功能 ====================
+
+        // 刷新进度列表
+        async function refreshProgress() {
+            try {
+                const response = await fetch('/api/list-parsed-dirs');
+                const data = await response.json();
+
+                if (data.success && data.directories.length > 0) {
+                    renderProgressList(data.directories);
+                    document.getElementById('progress-section').style.display = 'block';
+                } else {
+                    document.getElementById('progress-section').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('获取进度列表失败:', error);
+            }
+        }
+
+        // 渲染进度列表
+        function renderProgressList(directories) {
+            const container = document.getElementById('progress-list');
+
+            container.innerHTML = directories.map(dir => {
+                if (!dir.has_progress) return '';
+
+                const progress = dir.progress || {};
+                const stats = progress.statistics || {};
+                const total = progress.total_notes || 0;
+                const completed = stats.completed || 0;
+                const failed = stats.failed || 0;
+                const pending = stats.pending || 0;
+                const processing = stats.processing || 0;
+
+                const percentage = total > 0 ? ((completed / total) * 100).toFixed(1) : 0;
+                const isCompleted = pending === 0 && processing === 0;
+                const hasIncomplete = pending > 0 || processing > 0;
+
+                let statusBadge = '';
+                if (isCompleted && failed === 0) {
+                    statusBadge = '<span class="status-badge completed">✓ 已完成</span>';
+                } else if (isCompleted && failed > 0) {
+                    statusBadge = '<span class="status-badge completed">✓ 完成(部分失败)</span>';
+                } else if (processing > 0) {
+                    statusBadge = '<span class="status-badge processing">⏳ 处理中</span>';
+                } else if (pending > 0) {
+                    statusBadge = '<span class="status-badge processing">⏸️ 未完成</span>';
+                }
+
+                return `
+                    <div class="progress-card">
+                        <div class="progress-header">
+                            <div>
+                                <div class="progress-title">📁 ${dir.dirname}</div>
+                                <div class="progress-meta">
+                                    来源: ${progress.json_source || '未知'} |
+                                    开始: ${progress.start_time || '未知'} |
+                                    更新: ${progress.last_update || '未知'}
+                                </div>
+                            </div>
+                            <div>
+                                ${statusBadge}
+                            </div>
+                        </div>
+
+                        <div class="progress-stats">
+                            <div class="stat-box">
+                                <div class="stat-box-value">${total}</div>
+                                <div class="stat-box-label">总笔记数</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-box-value" style="color: #10b981;">${completed}</div>
+                                <div class="stat-box-label">已完成</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-box-value" style="color: #f59e0b;">${pending}</div>
+                                <div class="stat-box-label">待处理</div>
+                            </div>
+                            ${failed > 0 ? `
+                            <div class="stat-box">
+                                <div class="stat-box-value" style="color: #ef4444;">${failed}</div>
+                                <div class="stat-box-label">失败</div>
+                            </div>
+                            ` : ''}
+                            ${processing > 0 ? `
+                            <div class="stat-box">
+                                <div class="stat-box-value" style="color: #3b82f6;">${processing}</div>
+                                <div class="stat-box-label">处理中</div>
+                            </div>
+                            ` : ''}
+                        </div>
+
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill ${isCompleted ? 'completed' : ''}"
+                                 style="width: ${percentage}%"></div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="font-size: 14px; color: #6b7280;">
+                                进度: ${percentage}% (${completed}/${total})
+                            </div>
+                            <div class="progress-actions">
+                                ${hasIncomplete ? `
+                                <button class="btn btn-small btn-resume"
+                                        onclick="resumeParsing('${dir.dirname}', '${progress.json_source || ''}')">
+                                    🔄 继续解析
+                                </button>
+                                ` : ''}
+                                <button class="btn btn-small btn-view-detail"
+                                        onclick="viewProgressDetail('${dir.dirname}')">
+                                    📊 查看详情
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 继续解析
+        async function resumeParsing(dirname, jsonSource) {
+            if (!confirm(`确定要继续解析任务吗？\n目录: ${dirname}\n来源: ${jsonSource}`)) {
+                return;
+            }
+
+            showLoading(true);
+            showToast('正在继续解析...', 'info');
+
+            try {
+                // 从进度文件中提取原始JSON文件名
+                const jsonFilename = jsonSource.split('/').pop().split('\\').pop();
+
+                const response = await fetch('/api/parse-json', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        files: [jsonFilename],
+                        save_format: 'all',  // 使用默认格式
+                        include_comments: true,
+                        download_media: true,
+                        output_name: dirname  // 使用相同的输出目录名
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('继续解析完成！', 'success');
+                    setTimeout(() => {
+                        refreshProgress();
+                    }, 1000);
+                } else {
+                    showToast('继续解析失败: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showToast('网络错误: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // 查看进度详情
+        async function viewProgressDetail(dirname) {
+            try {
+                const response = await fetch(`/api/progress/${dirname}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    // 在控制台输出详细信息
+                    console.log('进度详情:', data.progress);
+
+                    // 渲染笔记详细进度
+                    renderNoteDetailModal(data);
+
+                    // 显示模态框
+                    document.getElementById('note-detail-modal').classList.add('show');
+                } else {
+                    showToast('获取详情失败: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showToast('网络错误: ' + error.message, 'error');
+            }
+        }
+
+        // 渲染笔记详细进度模态框
+        function renderNoteDetailModal(data) {
+            const progress = data.progress;
+            const notes_detail = data.notes_detail || [];
+            const stats = progress.statistics || {};
+
+            const container = document.getElementById('note-detail-content');
+
+            // 顶部总结信息
+            let html = `
+                <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="color: #1f2937; margin-bottom: 10px;">任务概览</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 14px;">
+                        <div><span style="color: #6b7280;">任务ID:</span> <strong>${progress.task_id}</strong></div>
+                        <div><span style="color: #6b7280;">来源文件:</span> <strong>${progress.json_source}</strong></div>
+                        <div><span style="color: #6b7280;">开始时间:</span> <strong>${progress.start_time}</strong></div>
+                        <div><span style="color: #6b7280;">最后更新:</span> <strong>${progress.last_update}</strong></div>
+                    </div>
+                    <div style="margin-top: 15px; display: flex; gap: 15px; flex-wrap: wrap;">
+                        <div class="stat-box" style="min-width: 100px;">
+                            <div class="stat-box-value">${progress.total_notes}</div>
+                            <div class="stat-box-label">总笔记数</div>
+                        </div>
+                        <div class="stat-box" style="min-width: 100px;">
+                            <div class="stat-box-value" style="color: #10b981;">${stats.completed}</div>
+                            <div class="stat-box-label">已完成</div>
+                        </div>
+                        <div class="stat-box" style="min-width: 100px;">
+                            <div class="stat-box-value" style="color: #f59e0b;">${stats.pending}</div>
+                            <div class="stat-box-label">待处理</div>
+                        </div>
+                        ${stats.failed > 0 ? `
+                        <div class="stat-box" style="min-width: 100px;">
+                            <div class="stat-box-value" style="color: #ef4444;">${stats.failed}</div>
+                            <div class="stat-box-label">失败</div>
+                        </div>
+                        ` : ''}
+                        ${stats.processing > 0 ? `
+                        <div class="stat-box" style="min-width: 100px;">
+                            <div class="stat-box-value" style="color: #3b82f6;">${stats.processing}</div>
+                            <div class="stat-box-label">处理中</div>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <h3 style="color: #1f2937; margin-bottom: 15px;">📝 每条笔记详细进度</h3>
+            `;
+
+            // 每个笔记的详细信息
+            notes_detail.forEach((note, index) => {
+                const statusInfo = getStatusInfo(note.status);
+                const comments = note.comments || {};
+
+                html += `
+                    <div class="note-item">
+                        <div class="note-item-header">
+                            <div>
+                                <span style="font-weight: 600; color: #1f2937;">#${index + 1}</span>
+                                <span class="note-id">${note.note_id}</span>
+                            </div>
+                            <span class="status-badge ${note.status}">${statusInfo.text}</span>
+                        </div>
+
+                        <div class="note-stats-row">
+                            <div class="note-stat-item">
+                                <span class="note-stat-label">基本信息:</span>
+                                <span class="note-stat-value" style="color: ${note.basic_info_saved ? '#10b981' : '#ef4444'};">
+                                    ${note.basic_info_saved ? '✓ 已保存' : '✗ 未保存'}
+                                </span>
+                            </div>
+                            ${note.start_time ? `
+                            <div class="note-stat-item">
+                                <span class="note-stat-label">开始:</span>
+                                <span class="note-stat-value">${note.start_time}</span>
+                            </div>
+                            ` : ''}
+                            ${note.end_time ? `
+                            <div class="note-stat-item">
+                                <span class="note-stat-label">结束:</span>
+                                <span class="note-stat-value">${note.end_time}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+
+                        ${comments.enabled ? `
+                        <div style="margin-top: 10px; padding: 10px; background: white; border-radius: 6px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="font-size: 13px; font-weight: 600; color: #1f2937;">💬 评论获取进度</span>
+                                <span style="font-size: 12px; color: #6b7280;">
+                                    预期: ${formatNumber(comments.total_expected)} | 已获取: ${formatNumber(comments.total_fetched)}
+                                </span>
+                            </div>
+                            <div class="comment-progress-mini">
+                                <div class="progress-bar-mini">
+                                    <div class="progress-fill-mini ${note.status}"
+                                         style="width: ${comments.completion_rate}%"></div>
+                                </div>
+                                <div class="progress-text-mini">${comments.completion_rate}%</div>
+                            </div>
+                            ${comments.last_cursor && !comments.completed ? `
+                            <div style="margin-top: 6px; font-size: 12px; color: #6b7280;">
+                                📍 断点位置: ${comments.last_cursor.substring(0, 20)}...
+                            </div>
+                            ` : ''}
+                        </div>
+                        ` : ''}
+
+                        ${note.error_message ? `
+                        <div style="margin-top: 10px; padding: 10px; background: #fee2e2; border-radius: 6px; border-left: 3px solid #ef4444;">
+                            <div style="font-size: 12px; font-weight: 600; color: #991b1b; margin-bottom: 4px;">❌ 错误信息</div>
+                            <div style="font-size: 12px; color: #7f1d1d;">${note.error_message}</div>
+                        </div>
+                        ` : ''}
+
+                        <div style="margin-top: 10px; text-align: right;">
+                            <a href="${note.note_url}" target="_blank" style="font-size: 12px; color: #667eea; text-decoration: none;">
+                                🔗 查看笔记
+                            </a>
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (notes_detail.length === 0) {
+                html += `
+                    <div class="empty-state">
+                        <p>暂无笔记进度数据</p>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        // 获取状态信息
+        function getStatusInfo(status) {
+            const statusMap = {
+                'completed': { text: '✓ 已完成', color: '#10b981' },
+                'processing': { text: '⏳ 处理中', color: '#f59e0b' },
+                'failed': { text: '✗ 失败', color: '#ef4444' },
+                'pending': { text: '⏸️ 待处理', color: '#6b7280' }
+            };
+            return statusMap[status] || { text: '未知', color: '#9ca3af' };
+        }
+
+        // 关闭笔记详情模态框
+        function closeNoteDetailModal() {
+            document.getElementById('note-detail-modal').classList.remove('show');
+        }
+
+        // ==================== 单笔记操作功能 ====================
+
+        // 解析单个笔记（增强版：添加超时控制）
+        async function parseSingleNoteAction(noteId, sourceFile) {
+            if (!confirm(`确定要解析这条笔记吗？\n笔记ID: ${noteId}`)) {
+                return;
+            }
+
+            showLoading(true);
+            showToast('正在解析笔记...', 'info');
+
+            // 超时控制（5分钟）
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 300000);
+
+            try {
+                const response = await fetch('/api/parse-single-note', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        note_id: noteId,
+                        source_file: sourceFile,
+                        include_comments: true,
+                        download_media: true,
+                        save_format: 'all'
+                    }),
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('笔记解析完成！', 'success');
+                    setTimeout(() => {
+                        refreshNotes(false);  // 强制刷新（非静默）
+                    }, 1000);
+                } else {
+                    showToast('解析失败: ' + data.message, 'error');
+                }
+            } catch (error) {
+                clearTimeout(timeoutId);
+
+                if (error.name === 'AbortError') {
+                    showToast('解析超时，可能仍在后台运行', 'error');
+                } else {
+                    showToast('网络错误: ' + error.message, 'error');
+                }
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // 查看单个笔记详情
+        function viewNoteDetail(noteId, outputDir) {
+            if (!outputDir) {
+                showToast('该笔记尚未解析', 'info');
+                return;
+            }
+            // 调用现有的查看进度详情功能
+            viewProgressDetail(outputDir);
+        }
+
+        // 笔记选择相关（用于批量操作）
+        function toggleNoteSelection(noteId) {
+            if (selectedNotes.has(noteId)) {
+                selectedNotes.delete(noteId);
+            } else {
+                selectedNotes.add(noteId);
+            }
+            // 更新统计
+            updateSelectedCount();
+            // 更新全选复选框状态
+            updateSelectAllNotesCheckbox();
+        }
+
+        function toggleSelectAllNotes() {
+            const checkbox = document.getElementById('select-all-notes-checkbox');
+            if (checkbox && checkbox.checked) {
+                // 全选所有笔记
+                allNotes.forEach(note => selectedNotes.add(note.note_id));
+            } else {
+                // 取消全选
+                selectedNotes.clear();
+            }
+            // 更新统计
+            updateSelectedCount();
+            // 重新渲染以更新所有复选框状态
+            renderNotesView();
+        }
+
+        function updateSelectAllNotesCheckbox() {
+            const checkbox = document.getElementById('select-all-notes-checkbox');
+            if (checkbox) {
+                checkbox.checked = allNotes.length > 0 && selectedNotes.size === allNotes.length;
+                checkbox.indeterminate = selectedNotes.size > 0 && selectedNotes.size < allNotes.length;
+            }
+        }
+
+        function updateSelectedCount() {
+            const countElement = document.getElementById('selected-count');
+            if (countElement) {
+                countElement.textContent = selectedNotes.size;
+            }
         }
     </script>
 </body>

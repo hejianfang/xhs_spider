@@ -7,11 +7,56 @@
 import json
 import os
 import time
+import traceback
 from datetime import datetime
 from loguru import logger
 from apis.xhs_pc_apis import XHS_Apis
 from xhs_utils.common_util import init
 from xhs_utils.data_util import handle_note_info, download_note, handle_comment_info
+from progress_manager import ProgressManager
+
+
+def parse_comment_count(count_str):
+    """
+    解析评论数量字符串，支持中文"万"和英文"w"
+
+    示例:
+    - "2.1万" -> 21000
+    - "3.5w" -> 35000
+    - "1234" -> 1234
+    - 1234 -> 1234
+
+    :param count_str: 评论数量字符串或整数
+    :return: 整数形式的评论数量
+    """
+    try:
+        # 如果已经是整数，直接返回
+        if isinstance(count_str, int):
+            return count_str
+
+        # 如果是字符串，进行解析
+        if isinstance(count_str, str):
+            count_str = count_str.strip()
+
+            # 处理包含"万"的情况
+            if '万' in count_str:
+                num_str = count_str.replace('万', '').strip()
+                return int(float(num_str) * 10000)
+
+            # 处理包含"w"或"W"的情况
+            elif 'w' in count_str.lower():
+                num_str = count_str.replace('w', '').replace('W', '').strip()
+                return int(float(num_str) * 10000)
+
+            # 纯数字字符串
+            else:
+                return int(count_str)
+
+        # 其他类型返回0
+        return 0
+    except Exception as e:
+        logger.warning(f"解析评论数量失败: {count_str}, 错误: {e}")
+        return 0
 
 
 class JsonToFullData:
@@ -27,6 +72,7 @@ class JsonToFullData:
         """
         self.xhs_apis = XHS_Apis()
         self.cookie_pool = cookie_pool
+        self.progress_manager = None  # 将在process时初始化
         
     def parse_json_file(self, json_file_path: str):
         """
@@ -142,30 +188,75 @@ class JsonToFullData:
         logger.error(f"所有 {total_accounts} 个Cookie账号均已尝试失败")
         return False, f"所有Cookie账号({total_accounts}个)均失败", None, None
 
-    def save_comments_streaming(self, note_id: str, xsec_token: str, output_file: str, proxies: dict = None):
+    def save_comments_streaming(self, note_id: str, xsec_token: str, output_file: str,
+                                expected_comment_count: int = 0, cookies_str: str = None,
+                                proxies: dict = None):
         """
-        流式获取评论，每页立即保存到JSONL文件
+        流式获取评论，每页立即保存到JSONL文件（支持断点续传）
         失败时遍历所有Cookie重试
 
         :param note_id: 笔记ID
         :param xsec_token: xsec_token参数
         :param output_file: 输出的JSONL文件路径
+        :param expected_comment_count: 预期的评论总数（从笔记基本信息获取）
         :param proxies: 代理设置
         :return: 获取到的总评论数
         """
-        cursor = ''
-        page = 0
-        total_comments = 0
+        # ========== 断点续传：检查是否有之前的进度 ==========
+        resume_cursor = ''
+        resume_page = 0
+        resume_total = 0
 
-        # 创建或清空评论文件
-        with open(output_file, 'w', encoding='utf-8') as f:
-            pass
+        if self.progress_manager:
+            note_progress = self.progress_manager.get_note_progress(note_id)
+            comments_progress = note_progress.get('comments', {})
 
-        logger.info(f"开始流式获取评论: note_id={note_id}")
+            if comments_progress.get('last_cursor'):
+                resume_cursor = comments_progress['last_cursor']
+                resume_total = comments_progress.get('total_fetched', 0)
+                resume_page = resume_total // 10  # 假设每页10条
+                logger.info(f"🔄 检测到评论断点，从第 {resume_page + 1} 页继续（已有{resume_total}条）")
+
+        cursor = resume_cursor
+        page = resume_page
+        total_comments = resume_total
+
+        # ========== 设置预期评论总数 ==========
+        if self.progress_manager and expected_comment_count > 0:
+            logger.info(f"📊 设置预期评论总数: {expected_comment_count:,}")
+            self.progress_manager.update_comments_progress(
+                note_id=note_id,
+                total_expected=expected_comment_count
+            )
+
+        # 创建或追加评论文件
+        file_mode = 'a' if resume_total > 0 else 'w'
+        if file_mode == 'w':
+            # 首次获取，清空文件
+            with open(output_file, 'w', encoding='utf-8') as f:
+                pass
+
+        logger.info(f"开始流式获取评论: note_id={note_id} (从cursor={cursor[:20] if cursor else '开头'})")
 
         while True:
             page += 1
-            logger.info(f"正在获取第 {page} 页评论...")
+            # 保存当前页的cursor（用于断点续传）
+            current_page_cursor = cursor
+
+            # 计算进度百分比（如果有预期数量）
+            progress_info = ""
+            if expected_comment_count > 0 and total_comments > 0:
+                progress_pct = (total_comments / expected_comment_count) * 100
+                progress_info = f" | 进度: {total_comments:,}/{expected_comment_count:,} ({progress_pct:.1f}%)"
+
+            logger.info(f"📄 正在获取第 {page} 页一级评论{progress_info}")
+
+            # ========== 实时更新当前页数 ==========
+            if self.progress_manager:
+                self.progress_manager.update_comments_progress(
+                    note_id=note_id,
+                    current_page=page
+                )
 
             # 使用Cookie池全遍历重试
             success, msg, res_json, account = self.get_with_cookie_pool_retry(
@@ -175,96 +266,197 @@ class JsonToFullData:
             )
 
             if not success:
-                logger.error(f"第 {page} 页获取失败（所有Cookie已尝试）: {msg}")
+                error_msg = f"第 {page} 页获取失败（所有Cookie已尝试）: {msg}"
+                logger.error(error_msg)
+                # ========== 记录错误到进度 ==========
+                if self.progress_manager:
+                    self.progress_manager.update_comments_progress(
+                        note_id=note_id,
+                        error=error_msg
+                    )
                 break
 
             # 检查返回数据结构
             if not res_json or 'data' not in res_json:
-                logger.warning(f"第 {page} 页返回数据异常，停止获取")
+                warning_msg = f"第 {page} 页返回数据异常，停止获取"
+                logger.warning(warning_msg)
+                # ========== 记录警告到进度 ==========
+                if self.progress_manager:
+                    self.progress_manager.update_comments_progress(
+                        note_id=note_id,
+                        warning=warning_msg
+                    )
                 break
 
             data = res_json.get('data', {})
 
             # 检查是否有comments字段
             if 'comments' not in data:
-                logger.warning(f"第 {page} 页返回data中没有comments字段，停止获取")
+                warning_msg = f"第 {page} 页返回data中没有comments字段"
+                logger.warning(warning_msg)
                 logger.debug(f"返回数据: {res_json}")
+
+                # 如果是第1页且data为空，很可能是xsec_token过期
+                if page == 1 and data == {}:
+                    error_msg = "xsec_token已过期或Cookie权限不足，评论API返回空数据"
+                    logger.error("=" * 60)
+                    logger.error("❌ 评论API返回空数据，可能原因：")
+                    logger.error("   1. xsec_token已过期（最常见）")
+                    logger.error("   2. Cookie权限不足")
+                    logger.error("   3. 笔记评论被限制或已删除")
+                    logger.error("")
+                    logger.error("💡 解决方案：")
+                    logger.error("   • 方案A: 重新搜索该关键词，获取新的笔记URL")
+                    logger.error("   • 方案B: 浏览器访问笔记页面，复制新URL（包含最新xsec_token）")
+                    logger.error("   • 方案C: 更新Cookie池中的Cookie")
+                    logger.error("=" * 60)
+                    # ========== 记录错误到进度 ==========
+                    if self.progress_manager:
+                        self.progress_manager.update_comments_progress(
+                            note_id=note_id,
+                            error=error_msg
+                        )
+                else:
+                    # ========== 记录警告到进度 ==========
+                    if self.progress_manager:
+                        self.progress_manager.update_comments_progress(
+                            note_id=note_id,
+                            warning=warning_msg
+                        )
                 break
 
             comments = data['comments']
             has_more = data.get('has_more', False)
 
-            # ✅ 获取完整子评论后再保存（支持多层级）
+            # ✅ 增量保存评论（每获取一条就立即保存）
             if comments:
-                logger.info(f"第 {page} 页获取到 {len(comments)} 条一级评论，开始获取所有层级的子评论...")
+                logger.info(f"第 {page} 页获取到 {len(comments)} 条一级评论，开始增量获取并保存所有层级的子评论...")
 
                 # 定义Cookie提供函数
                 def get_cookie_for_comment():
-                    """为评论获取提供Cookie（自动使用Cookie池）"""
+                    """为评论获取提供Cookie（支持Cookie池和单Cookie）"""
+                    # 优先使用当前请求的account（Cookie池）
                     if account and account.cookie_str:
                         return True, account.cookie_str
+                    # 其次尝试从Cookie池获取新账号
                     elif self.cookie_pool:
                         temp_account = self.cookie_pool.get_available_account()
                         if temp_account:
                             return True, temp_account.cookie_str
+                    # 最后使用提供的cookies_str（单Cookie模式）
+                    elif cookies_str:
+                        return True, cookies_str
+                    # 都没有则返回失败
+                    logger.error("❌ 无可用Cookie：既没有Cookie池也没有提供cookies_str参数")
                     return False, None
+
+                # 创建增量保存回调函数（每获取一条子评论就立即保存）
+                page_saved_count = 0  # 本页已保存的评论计数（包括子评论）
+                last_progress_update = 0  # 上次更新进度时的评论数
+
+                def save_comment_callback(comment_data, level):
+                    """
+                    增量保存单条评论的回调函数（增强版：实时更新进度）
+                    :param comment_data: 评论数据（已包含_level和_parent_id）
+                    :param level: 评论层级
+                    """
+                    nonlocal page_saved_count, total_comments, last_progress_update
+                    try:
+                        # 添加note_id字段
+                        comment_data['note_id'] = note_id
+
+                        # 立即追加到JSONL文件
+                        with open(output_file, 'a', encoding='utf-8') as f:
+                            f.write(json.dumps(comment_data, ensure_ascii=False) + '\n')
+                            f.flush()  # 立即刷新到磁盘
+
+                        page_saved_count += 1
+                        total_comments += 1
+
+                        # ========== ✅ 每50条更新一次进度（实时性） ==========
+                        if self.progress_manager and (total_comments - last_progress_update) >= 50:
+                            self.progress_manager.update_comments_progress(
+                                note_id=note_id,
+                                total_fetched=total_comments,
+                                current_page=page
+                            )
+                            last_progress_update = total_comments
+                            logger.debug(f"    🔄 实时进度已更新: {total_comments:,} 条评论")
+
+                        # 每100条打印一次进度
+                        if page_saved_count % 100 == 0:
+                            logger.debug(f"    已增量保存 {page_saved_count} 条评论（累计: {total_comments:,}）")
+                    except Exception as e:
+                        logger.warning(f"    保存评论失败: {e}")
 
                 # 处理每条一级评论，获取所有层级的子评论
                 for idx, comment in enumerate(comments, 1):
+                    # 先保存一级评论本身
+                    comment['note_id'] = note_id
+                    comment['_level'] = 1  # 一级评论
+                    comment['_parent_id'] = ''  # 一级评论无父级
+
+                    with open(output_file, 'a', encoding='utf-8') as f:
+                        f.write(json.dumps(comment, ensure_ascii=False) + '\n')
+                        f.flush()
+
+                    page_saved_count += 1
+                    total_comments += 1
+
+                    # 检查是否有子评论
                     sub_count = comment.get('sub_comment_count', 0)
-                    logger.debug(f"  [{idx}/{len(comments)}] 检查评论 {comment.get('id', 'N/A')[:20]}, sub_comment_count={sub_count} (类型:{type(sub_count).__name__})")
+                    logger.debug(f"  [{idx}/{len(comments)}] 评论 {comment.get('id', 'N/A')[:20]}, sub_comment_count={sub_count}")
 
                     if isinstance(sub_count, str):
                         sub_count = int(sub_count) if sub_count.isdigit() else 0
-                        logger.debug(f"  转换后 sub_count={sub_count}")
 
                     if sub_count > 0:
-                        logger.info(f"  [{idx}/{len(comments)}] 获取评论的多层级子评论（预期{sub_count}条）...")
+                        logger.info(f"  💬 [{idx}/{len(comments)}] 评论ID: {comment.get('id', 'N/A')[:16]}... | 预期子评论: {sub_count:,} 条")
 
                         try:
-                            # 使用新方法获取所有层级的子评论
+                            # 使用新方法获取所有层级的子评论，传入保存回调
+                            sub_start_time = time.time()
                             success, msg, full_comment = self.xhs_apis.get_note_all_inner_comment_with_provider(
                                 comment, xsec_token, get_cookie_for_comment, proxies,
-                                level=2, max_level=10  # 最多支持10层评论
+                                level=2, max_level=10,  # 最多支持10层评论
+                                save_callback=save_comment_callback  # ✅ 传入增量保存回调
                             )
+                            sub_elapsed = time.time() - sub_start_time
 
                             if success:
-                                comments[idx-1] = full_comment
-                                # 统计实际获取的评论数（包括所有层级）
-                                def count_recursive(c):
-                                    count = len(c.get('sub_comments', []))
-                                    for sub in c.get('sub_comments', []):
-                                        count += count_recursive(sub)
-                                    return count
+                                actual_sub_count = len(full_comment.get('sub_comments', []))
+                                logger.info(f"  ✅ 子评论获取完成 | 实际获取: {actual_sub_count:,} 条 | 耗时: {sub_elapsed:.1f}秒")
 
-                                actual_count = count_recursive(full_comment)
-                                logger.info(f"  ✅ 成功获取 {actual_count} 条多层级子评论")
+                                # 如果实际获取数少于预期，发出警告
+                                if actual_sub_count < sub_count * 0.9:  # 允许10%的误差
+                                    warning_msg = f"子评论数量不足：预期{sub_count}条，实际{actual_sub_count}条 ({actual_sub_count/sub_count*100:.1f}%)"
+                                    logger.warning(f"  ⚠️ {warning_msg}")
+                                    if self.progress_manager:
+                                        self.progress_manager.update_comments_progress(
+                                            note_id=note_id,
+                                            warning=warning_msg
+                                        )
                             else:
-                                logger.warning(f"  ⚠️ 子评论获取失败: {msg}，将保存不完整数据")
+                                warning_msg = f"子评论获取失败: {msg}"
+                                logger.warning(f"  ❌ {warning_msg}")
+                                # ========== 记录警告到进度 ==========
+                                if self.progress_manager:
+                                    self.progress_manager.update_comments_progress(
+                                        note_id=note_id,
+                                        warning=warning_msg
+                                    )
 
                         except Exception as e:
-                            logger.warning(f"  ⚠️ 处理评论异常: {e}，继续处理下一条")
+                            warning_msg = f"处理评论异常: {e}"
+                            logger.warning(f"  ⚠️ {warning_msg}，继续处理下一条")
+                            # ========== 记录警告到进度 ==========
+                            if self.progress_manager:
+                                self.progress_manager.update_comments_progress(
+                                    note_id=note_id,
+                                    warning=warning_msg
+                                )
 
-                # 统计真实评论数（包括所有层级）
-                def count_all_levels(comment_list):
-                    """递归统计所有层级的评论数"""
-                    count = len(comment_list)
-                    for c in comment_list:
-                        if 'sub_comments' in c and c['sub_comments']:
-                            count += count_all_levels(c['sub_comments'])
-                    return count
-
-                page_total = count_all_levels(comments)
-
-                # 保存到JSONL文件
-                with open(output_file, 'a', encoding='utf-8') as f:
-                    for comment in comments:
-                        comment['note_id'] = note_id
-                        f.write(json.dumps(comment, ensure_ascii=False) + '\n')
-                    f.flush()  # 立即刷新到磁盘
-
-                total_comments += page_total
-                logger.info(f"✅ 第 {page} 页已保存（一级: {len(comments)}，总计所有层级: {page_total}，累计: {total_comments}）")
+                logger.info(f"✅ 第 {page} 页已增量保存 {page_saved_count} 条评论（累计: {total_comments}）")
             else:
                 logger.info(f"第 {page} 页没有评论数据，停止获取")
                 break
@@ -272,20 +464,67 @@ class JsonToFullData:
             # 检查是否还有更多
             if not has_more:
                 logger.info(f"has_more为False，评论获取完成")
+                # 标记评论获取完成，保存最后状态
+                if self.progress_manager:
+                    self.progress_manager.update_comments_progress(
+                        note_id=note_id,
+                        total_fetched=total_comments,
+                        last_cursor=cursor,  # 保存当前cursor（已经是最后一页了）
+                        completed=True
+                    )
                 break
 
-            # 更新cursor
+            # 获取下一页cursor
             if 'cursor' in data:
-                cursor = str(data['cursor'])
-                logger.debug(f"下一页cursor: {cursor}")
+                next_cursor = str(data['cursor'])
+                logger.debug(f"下一页cursor: {next_cursor}")
+
+                # ========== 更新评论进度（支持断点续传）==========
+                # 重要：在成功处理完当前页后，保存下一页的cursor
+                # 这样断点续传时，会从下一页开始，不会重复也不会丢失数据
+                if self.progress_manager:
+                    self.progress_manager.update_comments_progress(
+                        note_id=note_id,
+                        total_fetched=total_comments,
+                        last_cursor=next_cursor,  # ✅ 保存下一页的cursor作为断点
+                        current_page=page
+                    )
+
+                # 更新cursor为下一页
+                cursor = next_cursor
             else:
-                logger.info("没有cursor字段，停止获取")
+                logger.info("没有cursor字段，评论获取完成")
+                # 标记评论获取完成，保存最后状态
+                if self.progress_manager:
+                    self.progress_manager.update_comments_progress(
+                        note_id=note_id,
+                        total_fetched=total_comments,
+                        last_cursor=cursor,  # 保存最后一个cursor
+                        completed=True
+                    )
                 break
 
             # 避免请求过快
             time.sleep(0.5)
 
-        logger.info(f"评论获取完成，共 {total_comments} 条评论（包含所有层级）保存到: {output_file}")
+        # 如果循环正常结束（不是break退出），说明可能有异常
+        # 不应该无条件标记为完成，因为可能是因为错误提前退出
+        logger.info(f"📊 评论获取结束，共 {total_comments:,} 条评论（包含所有层级）保存到: {output_file}")
+
+        # 计算完成度
+        if expected_comment_count > 0:
+            completion_pct = (total_comments / expected_comment_count) * 100
+            if completion_pct < 50:
+                logger.warning(f"⚠️ 完成度过低: {completion_pct:.1f}% ({total_comments:,}/{expected_comment_count:,})")
+                logger.warning(f"💡 可能的原因：")
+                logger.warning(f"  1. xsec_token已过期（最常见） - 需要重新获取URL")
+                logger.warning(f"  2. Cookie权限不足或限流 - 尝试使用Cookie池")
+                logger.warning(f"  3. API返回has_more=false但实际还有更多数据 - 可能是小红书的限制")
+            elif completion_pct < 90:
+                logger.info(f"📈 完成度: {completion_pct:.1f}% ({total_comments:,}/{expected_comment_count:,})")
+            else:
+                logger.success(f"✅ 完成度: {completion_pct:.1f}% ({total_comments:,}/{expected_comment_count:,})")
+
         return total_comments
 
     def get_note_full_info(self, note_url: str, cookies_str: str = None, output_dir: str = None,
@@ -344,11 +583,28 @@ class JsonToFullData:
                     query_params = parse_qs(parsed.query)
                     xsec_token = query_params.get('xsec_token', [''])[0]
 
+                    if not xsec_token:
+                        logger.error(f"❌ URL中没有xsec_token参数，无法获取评论")
+                        logger.error(f"建议：重新搜索关键词或访问笔记页面获取新URL")
+                        processed_note['comments'] = []
+                        processed_note['comment_count'] = 0
+                        return True, '笔记基本信息获取成功，但缺少xsec_token无法获取评论', processed_note
+
                     if output_dir:
+                        # 解析预期的评论总数
+                        expected_count = parse_comment_count(processed_note.get('comment_count', 0))
+                        logger.info(f"📊 笔记显示评论数: {processed_note.get('comment_count', '未知')}, 解析为: {expected_count:,}")
+
+                        # 确定使用的cookie（优先使用account的cookie，否则使用传入的cookies_str）
+                        cookie_to_use = account.cookie_str if account and hasattr(account, 'cookie_str') else cookies_str
+
                         # 流式保存到JSONL文件
                         comments_file = os.path.join(output_dir, f"note_{note_id}_comments.jsonl")
                         total_comments = self.save_comments_streaming(
-                            note_id, xsec_token, comments_file, proxies
+                            note_id, xsec_token, comments_file,
+                            expected_comment_count=expected_count,  # ✅ 传递预期评论数
+                            cookies_str=cookie_to_use,  # ✅ 传递Cookie字符串
+                            proxies=proxies
                         )
                         processed_note['comment_count'] = total_comments
                         processed_note['comments_file'] = comments_file
@@ -394,86 +650,204 @@ class JsonToFullData:
         except Exception as e:
             error_msg = f'获取笔记完整信息失败: {str(e)}'
             logger.error(error_msg)
-            import traceback
             logger.debug(traceback.format_exc())
             return False, error_msg, None
     
-    def process_json_to_full_data(self, json_file_path: str, cookies_str: str, 
-                                 output_dir: str = None, include_comments: bool = True, 
+    def process_json_to_full_data(self, json_file_path: str = None, cookies_str: str = None,
+                                 output_dir: str = None, include_comments: bool = True,
                                  download_media: bool = True, save_format: str = 'json',
-                                 proxies: dict = None):
+                                 proxies: dict = None, note_data_list: list = None):
         """
-        处理JSON文件，获取所有笔记的完整信息并保存
-        
-        :param json_file_path: 输入的JSON文件路径
-        :param cookies_str: 小红书cookies字符串
+        处理JSON文件或笔记数据列表，获取所有笔记的完整信息并保存
+
+        :param json_file_path: 输入的JSON文件路径（与note_data_list二选一）
+        :param cookies_str: 小红书cookies字符串（使用Cookie池时可选）
         :param output_dir: 输出目录，如果不指定则自动生成
         :param include_comments: 是否包含评论数据
         :param download_media: 是否下载媒体文件（图片、视频）
         :param save_format: 保存格式 'json', 'excel', 'all'
         :param proxies: 代理设置
+        :param note_data_list: 直接传入笔记数据列表（与json_file_path二选一）✨新增
         :return: 成功状态, 消息, 处理结果统计
         """
         try:
-            # 解析JSON文件
-            parse_success, parse_msg, note_urls = self.parse_json_file(json_file_path)
-            if not parse_success:
-                return False, parse_msg, {}
+            # ========== ✨ 新增：支持直接传入笔记数据 ==========
+            if note_data_list is not None:
+                # 从笔记数据中提取URL列表
+                note_urls = []
+                for note in note_data_list:
+                    if 'note_url' in note:
+                        note_urls.append(note['note_url'])
+                    elif 'note_id' in note and 'xsec_token' in note:
+                        note_url = f"https://www.xiaohongshu.com/explore/{note['note_id']}?xsec_token={note['xsec_token']}"
+                        note_urls.append(note_url)
+
+                if not note_urls:
+                    return False, '笔记数据中没有有效的URL', {}
+
+                # 使用笔记数据作为来源标识
+                json_source = f"direct_data_{len(note_urls)}_notes"
+                logger.info(f'直接处理 {len(note_urls)} 个笔记数据（无需JSON文件）')
+
+            elif json_file_path is not None:
+                # 传统方式：解析JSON文件
+                parse_success, parse_msg, note_urls = self.parse_json_file(json_file_path)
+                if not parse_success:
+                    return False, parse_msg, {}
+                json_source = json_file_path
+
+            else:
+                return False, '必须提供 json_file_path 或 note_data_list 参数之一', {}
             
             # 创建输出目录
             if output_dir is None:
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                json_filename = os.path.splitext(os.path.basename(json_file_path))[0]
-                output_dir = f"full_data_{json_filename}_{timestamp}"
-            
+                if json_file_path:
+                    json_filename = os.path.splitext(os.path.basename(json_file_path))[0]
+                    output_dir = f"parsed_{json_filename}_{timestamp}"
+                else:
+                    output_dir = f"parsed_direct_data_{timestamp}"
+
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir)
-            
+
+            # ========== 初始化进度管理器（支持断点续爬）==========
+            self.progress_manager = ProgressManager(output_dir, json_source)
+
+            # 获取待处理笔记列表（自动跳过已完成）
+            pending_note_urls = self.progress_manager.get_pending_notes(note_urls)
+
+            if len(pending_note_urls) == 0:
+                logger.success("🎉 所有笔记已处理完成！")
+                # 读取汇总数据返回
+                summary_file = os.path.join(output_dir, "summary_all_notes.json")
+                if os.path.exists(summary_file):
+                    with open(summary_file, 'r', encoding='utf-8') as f:
+                        summary_data = json.load(f)
+                    result_stats = {
+                        'total_notes': len(note_urls),
+                        'successful_notes': summary_data['process_info']['successful_notes'],
+                        'failed_notes': summary_data['process_info']['failed_notes'],
+                        'total_comments': summary_data['process_info']['total_comments'],
+                        'output_directory': output_dir
+                    }
+                    return True, '所有笔记已完成', result_stats
+                else:
+                    return True, '所有笔记已完成', {}
+
             # 创建媒体文件目录
             if download_media:
                 media_dir = os.path.join(output_dir, "media_files")
                 if not os.path.exists(media_dir):
                     os.makedirs(media_dir)
-            
+
             # 处理每个笔记
             successful_notes = []
             failed_notes = []
             total_comments_count = 0
 
-            for i, note_url in enumerate(note_urls, 1):
-                logger.info(f'正在处理第 {i}/{len(note_urls)} 个笔记: {note_url}')
+            # 记录开始时间（用于估算剩余时间）
+            process_start_time = time.time()
 
-                # 使用新的分步保存方法
-                success, msg, full_note_info = self.get_note_full_info(
-                    note_url,
-                    cookies_str=cookies_str,
-                    output_dir=output_dir,  # 传递output_dir启用分步保存
-                    proxies=proxies,
-                    include_comments=include_comments
-                )
+            for i, note_url in enumerate(pending_note_urls, 1):
+                note_id = None
+                try:
+                    # ========== 显示详细进度 ==========
+                    elapsed = time.time() - process_start_time
+                    remaining_time = self.progress_manager.estimate_remaining_time(i - 1, elapsed)
+                    stats = self.progress_manager.get_statistics()
 
-                if success and full_note_info:
-                    successful_notes.append(full_note_info)
+                    progress_msg = (
+                        f"\n{'='*60}\n"
+                        f"[{i}/{len(pending_note_urls)}] 总进度: {stats['completed']}/{len(note_urls)} "
+                        f"({stats['completed']/len(note_urls)*100:.1f}%)\n"
+                        f"成功: {stats['completed']} | 失败: {stats['failed']} | "
+                        f"剩余: {stats['pending']} | 预计剩余时间: {remaining_time}\n"
+                        f"{'='*60}"
+                    )
+                    logger.info(progress_msg)
 
-                    # 统计评论数
-                    comment_count = full_note_info.get('comment_count', 0)
-                    total_comments_count += comment_count
+                    # ========== 标记笔记开始处理 ==========
+                    note_id = self.progress_manager.extract_note_id(note_url)
+                    if note_id:
+                        self.progress_manager.mark_note_processing(note_id, note_url)
 
-                    # 下载媒体文件
-                    if download_media:
-                        try:
-                            download_note(full_note_info, media_dir, 'media')
-                            logger.info(f'媒体文件下载成功: {full_note_info["title"]}')
-                        except Exception as e:
-                            logger.warning(f'媒体文件下载失败: {str(e)}')
+                    logger.info(f'正在处理笔记: {note_url}')
 
-                    # 注意：单个笔记的JSON文件已经在get_note_full_info中保存，无需重复保存
-                else:
+                    # 使用新的分步保存方法
+                    success, msg, full_note_info = self.get_note_full_info(
+                        note_url,
+                        cookies_str=cookies_str,
+                        output_dir=output_dir,  # 传递output_dir启用分步保存
+                        proxies=proxies,
+                        include_comments=include_comments
+                    )
+
+                    if success and full_note_info:
+                        successful_notes.append(full_note_info)
+
+                        # 统计评论数
+                        comment_count = full_note_info.get('comment_count', 0)
+                        total_comments_count += comment_count
+
+                        # 下载媒体文件
+                        if download_media:
+                            try:
+                                download_note(full_note_info, media_dir, 'media')
+                                logger.info(f'媒体文件下载成功: {full_note_info["title"]}')
+                            except Exception as e:
+                                logger.warning(f'媒体文件下载失败: {str(e)}')
+
+                        # ========== 标记笔记完成 ==========
+                        if note_id:
+                            details = {
+                                'comments': {
+                                    'enabled': include_comments,
+                                    'total_fetched': comment_count,
+                                    'completed': True
+                                },
+                                'media': {
+                                    'enabled': download_media,
+                                    'completed': True
+                                }
+                            }
+                            self.progress_manager.mark_note_completed(note_id, details)
+
+                        # 注意：单个笔记的JSON文件已经在get_note_full_info中保存，无需重复保存
+                    else:
+                        failed_notes.append({
+                            'url': note_url,
+                            'error': msg,
+                            'note_id': note_id
+                        })
+                        logger.error(f'处理失败: {msg}')
+
+                        # ========== 标记笔记失败 ==========
+                        if note_id:
+                            self.progress_manager.mark_note_failed(note_id, msg)
+
+                except Exception as e:
+                    # ========== 捕获任何未预期的异常，确保不中断整个批处理 ==========
+                    error_msg = f'处理笔记时发生异常: {str(e)}'
+                    logger.error(error_msg)
+                    logger.debug(f"异常详情: {traceback.format_exc()}")
+
                     failed_notes.append({
                         'url': note_url,
-                        'error': msg
+                        'error': error_msg,
+                        'note_id': note_id,
+                        'exception': True
                     })
-                    logger.error(f'处理失败: {msg}')
+
+                    # 标记笔记失败
+                    if note_id:
+                        try:
+                            self.progress_manager.mark_note_failed(note_id, error_msg)
+                        except Exception as mark_error:
+                            logger.warning(f"标记笔记失败状态时出错: {mark_error}")
+
+                    # 继续处理下一个笔记
+                    logger.info("⏭️  跳过当前笔记，继续处理下一个...")
             
             # 保存汇总数据
             summary_data = {

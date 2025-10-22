@@ -940,9 +940,10 @@ class XHS_Apis():
 
     def get_note_all_inner_comment_with_provider(self, comment: dict, xsec_token: str,
                                                  cookie_provider, proxies: dict = None,
-                                                 level: int = 2, max_level: int = 10):
+                                                 level: int = 2, max_level: int = 10,
+                                                 save_callback=None):
         """
-        递归获取评论的所有子评论（支持Cookie池，支持多层级）
+        递归获取评论的所有子评论（支持Cookie池，支持多层级，支持增量保存）
 
         :param comment: 评论对象
         :param xsec_token: xsec_token参数
@@ -950,6 +951,7 @@ class XHS_Apis():
         :param proxies: 代理设置
         :param level: 当前评论层级
         :param max_level: 最大递归层级（防止无限递归）
+        :param save_callback: 可选的保存回调函数，签名为 callback(comment, level)，每获取一条评论就调用
         :return: (success, msg, comment)
         """
         try:
@@ -980,7 +982,7 @@ class XHS_Apis():
                 # 递归处理已有的子评论
                 for sub_comment in comment['sub_comments']:
                     self.get_note_all_inner_comment_with_provider(
-                        sub_comment, xsec_token, cookie_provider, proxies, level + 1, max_level
+                        sub_comment, xsec_token, cookie_provider, proxies, level + 1, max_level, save_callback
                     )
                 return True, 'success', comment
 
@@ -1047,6 +1049,17 @@ class XHS_Apis():
                         inner_comment_list.extend(comments)
                         logger.debug(f"  成功获取 {len(comments)} 条子评论")
 
+                        # 增量保存：立即保存每条获取到的子评论
+                        if save_callback:
+                            for sub_comment in comments:
+                                try:
+                                    # 添加层级信息
+                                    sub_comment['_level'] = level
+                                    sub_comment['_parent_id'] = comment.get('id', '')
+                                    save_callback(sub_comment, level)
+                                except Exception as e:
+                                    logger.warning(f"保存子评论失败: {e}")
+
                         # 检查分页
                         if 'cursor' in res_json["data"]:
                             cursor = str(res_json["data"]["cursor"])
@@ -1090,7 +1103,7 @@ class XHS_Apis():
             for sub_comment in comment['sub_comments']:
                 try:
                     self.get_note_all_inner_comment_with_provider(
-                        sub_comment, xsec_token, cookie_provider, proxies, level + 1, max_level
+                        sub_comment, xsec_token, cookie_provider, proxies, level + 1, max_level, save_callback
                     )
                 except Exception as e:
                     logger.warning(f"{level+1}级评论 {sub_comment.get('id')} 获取失败: {e}，继续处理其他评论")
